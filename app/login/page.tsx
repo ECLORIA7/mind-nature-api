@@ -28,7 +28,9 @@ export default function LoginPage() {
         return
       }
       saveSession(data)
-      if (data.user.role === 'patient') {
+      if (data.user.role === 'admin') {
+        router.push('/operator/teams')
+      } else if (data.user.role === 'patient') {
         if (!data.user.profile_completed) {
           router.push('/client/setup')
         } else {

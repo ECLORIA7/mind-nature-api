@@ -1,0 +1,66 @@
+.wrapper {
+  min-height: 100vh;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+}
+
+.nav {
+  background: #1e293b;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: 56px;
+  gap: 24px;
+}
+
+.brand {
+  font-weight: bold;
+  font-size: 18px;
+  margin-right: 16px;
+  white-space: nowrap;
+}
+
+.links {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.link, .active {
+  color: rgba(255,255,255,0.7);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.active {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-weight: 600;
+}
+
+.link:hover {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+}
+
+.logout {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.main {
+  flex: 1;
+  padding: 32px 24px;
+  max-width: 1000px;
+  width: 100%;
+  margin: 0 auto;
+}

@@ -1,0 +1,162 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.heading {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1e293b;
+}
+
+.addBtn {
+  background: #1e293b;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.form {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 480px;
+}
+
+.formTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.input, .select {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+  font-family: inherit;
+}
+
+.formActions {
+  display: flex;
+  gap: 10px;
+}
+
+.saveBtn {
+  background: #1e293b;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.cancelBtn {
+  background: #f1f5f9;
+  color: #374151;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.error {
+  color: #dc2626;
+  font-size: 14px;
+}
+
+.resultCard {
+  background: #f0fdf4;
+  border: 2px solid #15803d;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 24px;
+  max-width: 480px;
+}
+
+.resultTitle {
+  font-weight: 700;
+  color: #14532d;
+  margin-bottom: 8px;
+}
+
+.password {
+  font-size: 22px;
+  font-weight: bold;
+  color: #15803d;
+  font-family: monospace;
+  letter-spacing: 0.05em;
+}
+
+.table {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr 1fr;
+  padding: 12px 16px;
+  background: #f8fafc;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr 1fr 1fr;
+  padding: 12px 16px;
+  align-items: center;
+  border-bottom: 1px solid #f1f5f9;
+  gap: 8px;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.email {
+  font-size: 13px;
+  color: #64748b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rowSelect {
+  padding: 6px 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 13px;
+  outline: none;
+  background: #f8fafc;
+}
+
+.empty {
+  color: #94a3b8;
+  text-align: center;
+  padding: 48px;
+}

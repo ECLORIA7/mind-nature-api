@@ -51,3 +51,13 @@ export function requireCounselor(user: AuthUser | null) {
   }
   return null
 }
+
+export function requireOperator(user: AuthUser | null) {
+  if (!user) {
+    return Response.json({ error: '認証が必要です' }, { status: 401 })
+  }
+  if (user.role !== 'admin') {
+    return Response.json({ error: '運営者権限が必要です' }, { status: 403 })
+  }
+  return null
+}
