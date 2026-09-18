@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { apiFetch } from '@/lib/auth-client'
 import styles from './patients.module.css'
 
@@ -14,6 +15,7 @@ type Patient = {
 }
 
 export default function PatientsPage() {
+  const router = useRouter()
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -34,7 +36,7 @@ export default function PatientsPage() {
       ) : (
         <div className={styles.grid}>
           {patients.map((p) => (
-            <div key={p.id} className={styles.card}>
+            <div key={p.id} className={styles.card} onClick={() => router.push(`/counselor/patients/${p.id}`)} style={{ cursor: 'pointer' }}>
               <h2 className={styles.name}>{p.profiles?.full_name}</h2>
               <p className={styles.meta}>{p.age ? `${p.age}歳` : ''} {p.sex === 1 ? '男性' : p.sex === 2 ? '女性' : ''}</p>
               <div className={styles.tags}>
