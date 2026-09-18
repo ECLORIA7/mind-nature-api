@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
 
   const { data: patients } = await supabaseAdmin
     .from('patients')
-    .select('id, full_name, furigana, age, sex, nickname, profile_completed')
+    .select('id, furigana, age, sex, nickname, profile_completed, profiles(full_name)')
 
   const { data: addictions } = await supabaseAdmin
     .from('patient_addictions')
@@ -42,12 +42,17 @@ export async function GET(req: NextRequest) {
     .select('id, name')
     .order('name')
 
-  const enriched = (patients ?? []).map((p) => ({
-    ...p,
-    email: emailMap[p.id] ?? '',
-    created_at: createdAtMap[p.id] ?? '',
-    addictions: addictionMap[p.id] ?? [],
-  }))
+  const enriched = (patients ?? []).map((p) => {
+    const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles
+    const full_name = (profile as { full_name?: string } | null)?.full_name ?? ''
+    return {
+      ...p,
+      full_name,
+      email: emailMap[p.id] ?? '',
+      created_at: createdAtMap[p.id] ?? '',
+      addictions: addictionMap[p.id] ?? [],
+    }
+  })
 
   enriched.sort((a, b) => (a.furigana ?? a.full_name ?? '').localeCompare(b.furigana ?? b.full_name ?? '', 'ja'))
 
