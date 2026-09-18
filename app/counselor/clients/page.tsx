@@ -25,11 +25,12 @@ function formatDate(iso: string) {
   return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
-export default function OperatorClientsPage() {
+export default function CounselorClientsPage() {
   const router = useRouter()
   const [clients, setClients] = useState<Client[]>([])
   const [addictions, setAddictions] = useState<Addiction[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   const [searchName, setSearchName] = useState('')
   const [filterAddiction, setFilterAddiction] = useState('')
@@ -37,9 +38,13 @@ export default function OperatorClientsPage() {
   const [filterDateTo, setFilterDateTo] = useState('')
 
   useEffect(() => {
-    apiFetch('/operator/clients')
+    apiFetch('/counselor/clients')
       .then((r) => r.json())
-      .then((d) => { setClients(d.clients ?? []); setAddictions(d.addictions ?? []) })
+      .then((d) => {
+        if (d.error) { setError(d.error); return }
+        setClients(d.clients ?? [])
+        setAddictions(d.addictions ?? [])
+      })
       .finally(() => setLoading(false))
   }, [])
 
@@ -47,17 +52,10 @@ export default function OperatorClientsPage() {
     return clients.filter((c) => {
       if (searchName) {
         const q = searchName.toLowerCase()
-        const name = (c.full_name ?? '').toLowerCase()
-        const kana = (c.furigana ?? '').toLowerCase()
-        if (!name.includes(q) && !kana.includes(q)) return false
+        if (!(c.full_name ?? '').toLowerCase().includes(q) && !(c.furigana ?? '').toLowerCase().includes(q)) return false
       }
-      if (filterAddiction) {
-        if (!c.addictions.some((a) => String(a.id) === filterAddiction)) return false
-      }
-      if (filterDateFrom) {
-        const from = new Date(filterDateFrom)
-        if (new Date(c.created_at) < from) return false
-      }
+      if (filterAddiction && !c.addictions.some((a) => String(a.id) === filterAddiction)) return false
+      if (filterDateFrom && new Date(c.created_at) < new Date(filterDateFrom)) return false
       if (filterDateTo) {
         const to = new Date(filterDateTo)
         to.setDate(to.getDate() + 1)
@@ -67,33 +65,24 @@ export default function OperatorClientsPage() {
     })
   }, [clients, searchName, filterAddiction, filterDateFrom, filterDateTo])
 
-  const resetFilters = () => {
-    setSearchName('')
-    setFilterAddiction('')
-    setFilterDateFrom('')
-    setFilterDateTo('')
-  }
+  const resetFilters = () => { setSearchName(''); setFilterAddiction(''); setFilterDateFrom(''); setFilterDateTo('') }
 
   if (loading) return <p>読み込み中...</p>
+  if (error) return <p style={{ color: '#dc2626' }}>{error}</p>
 
   return (
     <div>
       <div className={styles.header}>
         <h1 className={styles.heading}>
-          クライアント一覧
+          クライアント一覧（自チーム）
           <span className={styles.count}>{filtered.length} / {clients.length}名</span>
         </h1>
       </div>
 
       <div className={styles.filters}>
         <div className={styles.filterGroup}>
-          <label className={styles.filterLabel}>名前・フリガナで検索</label>
-          <input
-            className={styles.filterInput}
-            placeholder="山田 / ヤマダ"
-            value={searchName}
-            onChange={(e) => setSearchName(e.target.value)}
-          />
+          <label className={styles.filterLabel}>名前・フリガナ</label>
+          <input className={styles.filterInput} placeholder="山田 / ヤマダ" value={searchName} onChange={(e) => setSearchName(e.target.value)} />
         </div>
         <div className={styles.filterGroup}>
           <label className={styles.filterLabel}>症状カテゴリー</label>
@@ -115,17 +104,11 @@ export default function OperatorClientsPage() {
 
       <div className={styles.table}>
         <div className={styles.tableHeader}>
-          <span>氏名</span>
-          <span>メールアドレス</span>
-          <span>症状カテゴリー</span>
-          <span>ステータス</span>
-          <span>登録日</span>
+          <span>氏名</span><span>メールアドレス</span><span>症状カテゴリー</span><span>ステータス</span><span>登録日</span>
         </div>
-
         {filtered.length === 0 && <p className={styles.empty}>該当するクライアントがいません</p>}
-
         {filtered.map((c) => (
-          <div key={c.id} className={styles.tableRow} onClick={() => router.push(`/operator/clients/${c.id}`)} style={{ cursor: 'pointer' }}>
+          <div key={c.id} className={styles.tableRow} onClick={() => router.push(`/counselor/patients/${c.id}`)} style={{ cursor: 'pointer' }}>
             <div className={styles.nameCell}>
               <span className={styles.name}>{c.full_name || '（未設定）'}</span>
               {c.furigana && <span className={styles.furigana}>{c.furigana}</span>}
@@ -139,7 +122,7 @@ export default function OperatorClientsPage() {
             </div>
             <span>
               <span className={c.profile_completed ? styles.badgeComplete : styles.badgePending}>
-                {c.profile_completed ? '登録完了' : 'プロフィール未入力'}
+                {c.profile_completed ? '登録完了' : '未入力'}
               </span>
             </span>
             <span className={styles.dateCell}>{formatDate(c.created_at)}</span>
