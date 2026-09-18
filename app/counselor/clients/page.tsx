@@ -108,7 +108,7 @@ export default function CounselorClientsPage() {
         </div>
         {filtered.length === 0 && <p className={styles.empty}>該当するクライアントがいません</p>}
         {filtered.map((c) => (
-          <div key={c.id} className={styles.tableRow} onClick={() => router.push(`/counselor/patients/${c.id}`)} style={{ cursor: 'pointer' }}>
+          <div key={c.id} className={styles.tableRow} onClick={() => router.push(`/counselor/preview/${c.id}`)} style={{ cursor: 'pointer' }}>
             <div className={styles.nameCell}>
               <span className={styles.name}>{c.full_name || '（未設定）'}</span>
               {c.furigana && <span className={styles.furigana}>{c.furigana}</span>}

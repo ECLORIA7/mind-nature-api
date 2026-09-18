@@ -1,0 +1,445 @@
+/* Full-screen overlay so the counselor sees what the client sees */
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #f0fdf4;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Thin amber bar at very top */
+.banner {
+  background: #92400e;
+  color: #fef3c7;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 36px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.bannerBack {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fef3c7;
+  border-radius: 4px;
+  padding: 3px 10px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.bannerBack:hover { background: rgba(255,255,255,0.3); }
+
+.bannerName {
+  font-weight: 600;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Green nav - exact replica of patient nav */
+.nav {
+  background: #15803d;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  height: 56px;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.brand {
+  font-weight: bold;
+  font-size: 18px;
+  margin-right: 16px;
+  white-space: nowrap;
+}
+
+.navLinks {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.navLinks::-webkit-scrollbar { display: none; }
+
+.navLink {
+  color: rgba(255,255,255,0.8);
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.navLink:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+}
+
+.navLinkActive {
+  background: rgba(255,255,255,0.2);
+  color: #fff;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  border: none;
+  cursor: pointer;
+}
+
+/* Extra counselor-only tab */
+.navLinkCounselor {
+  color: #fcd34d;
+  text-decoration: none;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  background: none;
+  border: none;
+  cursor: pointer;
+  border: 1px solid rgba(252,211,77,0.4);
+}
+.navLinkCounselorActive {
+  background: rgba(252,211,77,0.2);
+  color: #fcd34d;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 14px;
+  white-space: nowrap;
+  border: 1px solid rgba(252,211,77,0.6);
+  cursor: pointer;
+}
+
+/* Scrollable content area */
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 32px 24px;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+
+/* ---- ToDo styles (match patient) ---- */
+.heading {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1e293b;
+  margin-bottom: 24px;
+}
+
+.todoList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.todoItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.check {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid #15803d;
+  flex-shrink: 0;
+}
+
+.checkDone {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #15803d;
+  flex-shrink: 0;
+}
+
+.todoText { font-size: 15px; color: #1e293b; }
+.todoTextDone { font-size: 15px; color: #94a3b8; text-decoration: line-through; }
+
+/* ---- Chat styles (match patient) ---- */
+.chatWrapper {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 36px - 56px - 64px);
+  min-height: 300px;
+}
+
+.addictionTabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.addictionTab {
+  background: #dcfce7;
+  border: none;
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  color: #15803d;
+}
+
+.addictionTabActive {
+  background: #15803d;
+  color: #fff;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.rowMe {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.rowOther {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.senderName {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  padding-left: 4px;
+}
+
+.bubbleMe {
+  background: #15803d;
+  color: #fff;
+  border-radius: 16px 4px 16px 16px;
+  padding: 10px 14px;
+  font-size: 14px;
+  max-width: 70%;
+}
+
+.bubbleOther {
+  background: #fff;
+  color: #1e293b;
+  border-radius: 4px 16px 16px 16px;
+  padding: 10px 14px;
+  font-size: 14px;
+  max-width: 70%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.inputRow {
+  display: flex;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+  margin-top: 8px;
+}
+
+.input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+}
+
+.input:focus { border-color: #15803d; }
+
+.sendBtn {
+  background: #15803d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0 20px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.sendBtn:disabled { opacity: 0.6; }
+
+/* ---- Groups ---- */
+.groupCard {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.groupName { font-size: 16px; font-weight: 600; color: #1e293b; }
+.groupOrg { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+.groupLink {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #15803d;
+  text-decoration: none;
+}
+
+/* ---- MyPage / Profile ---- */
+.section {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: #15803d;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #dcfce7;
+  margin-bottom: 16px;
+  flex: 1;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.noteGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.value {
+  font-size: 15px;
+  color: #1e293b;
+  white-space: pre-wrap;
+}
+
+.symptomBlock {
+  margin-bottom: 20px;
+}
+
+.symptomTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+  padding: 6px 12px;
+  background: #f0fdf4;
+  border-radius: 6px;
+}
+
+.editBtn {
+  background: #15803d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 16px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.textarea {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.textarea:focus { border-color: #15803d; }
+
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.saveBtn {
+  background: #15803d;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.saveBtn:disabled { opacity: 0.6; }
+
+.cancelBtn {
+  background: #f1f5f9;
+  color: #374151;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.empty {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .nav { padding: 0 12px; }
+  .brand { display: none; }
+  .content { padding: 20px 16px; }
+  .grid { grid-template-columns: 1fr; }
+  .section { padding: 16px; }
+  .chatWrapper { height: calc(100vh - 36px - 56px - 40px); }
+}
