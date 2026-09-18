@@ -5,12 +5,17 @@ import { getAuthUser } from '@/lib/auth'
 export async function GET(req: NextRequest) {
   const user = await getAuthUser(req)
   if (!user) return Response.json({ error: '認証が必要です' }, { status: 401 })
-  if (user.role !== 'patient') return Response.json({ error: '権限がありません' }, { status: 403 })
+
+  const patientId = user.role === 'patient'
+    ? user.id
+    : (req.nextUrl.searchParams.get('patient_id') ?? null)
+
+  if (!patientId) return Response.json({ error: 'patient_id が必要です' }, { status: 400 })
 
   const { data: membership } = await supabaseAdmin
     .from('group_members')
     .select('group_id')
-    .eq('patient_id', user.id)
+    .eq('patient_id', patientId)
 
   const groupIds = (membership ?? []).map((m) => m.group_id)
   if (groupIds.length === 0) return Response.json({ groups: [] })
@@ -22,3 +27,4 @@ export async function GET(req: NextRequest) {
 
   return Response.json({ groups: groups ?? [] })
 }
+
