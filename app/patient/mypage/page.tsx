@@ -19,6 +19,7 @@ type SymptomDetail = {
 
 type Profile = {
   full_name: string
+  nickname: string
   age: string
   sex: number
   address: string
@@ -93,6 +94,7 @@ export default function PatientMyPage() {
         <div className={styles.grid}>
           {[
             { label: '氏名', key: 'full_name' },
+            { label: 'ニックネーム（グループチャット用）', key: 'nickname' },
             { label: '年齢', key: 'age' },
             { label: '住所', key: 'address' },
             { label: '職業', key: 'profession' },

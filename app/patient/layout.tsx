@@ -31,6 +31,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
         <div className={styles.links}>
           <Link href="/patient/todo" className={pathname === '/patient/todo' ? styles.active : styles.link}>ToDo</Link>
           <Link href="/patient/chat" className={pathname === '/patient/chat' ? styles.active : styles.link}>チャット</Link>
+          <Link href="/patient/groups" className={pathname.startsWith('/patient/groups') || pathname.startsWith('/patient/group-chat') ? styles.active : styles.link}>グループ</Link>
           <Link href="/patient/mypage" className={pathname === '/patient/mypage' ? styles.active : styles.link}>マイページ</Link>
         </div>
         <button onClick={handleLogout} className={styles.logout}>ログアウト</button>

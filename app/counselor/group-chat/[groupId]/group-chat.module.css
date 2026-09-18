@@ -1,0 +1,118 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+}
+
+.header {
+  flex-shrink: 0;
+  margin-bottom: 12px;
+}
+
+.back {
+  font-size: 13px;
+  color: #64748b;
+  text-decoration: none;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.back:hover {
+  color: #1e293b;
+}
+
+.heading {
+  font-size: 22px;
+  font-weight: bold;
+  color: #1e293b;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 8px 0;
+  margin-bottom: 16px;
+}
+
+.empty {
+  color: #94a3b8;
+  text-align: center;
+  margin-top: 48px;
+}
+
+.rowMe {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.rowOther {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.senderName {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 4px;
+  padding-left: 4px;
+}
+
+.bubbleMe {
+  background: #1e293b;
+  color: #fff;
+  border-radius: 16px 16px 4px 16px;
+  padding: 10px 16px;
+  max-width: 70%;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.bubbleOther {
+  background: #fff;
+  color: #1e293b;
+  border-radius: 16px 16px 16px 4px;
+  padding: 10px 16px;
+  max-width: 70%;
+  font-size: 15px;
+  line-height: 1.5;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.inputRow {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  padding: 12px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #1e293b;
+  box-shadow: 0 0 0 2px rgba(30,41,59,0.12);
+}
+
+.sendBtn {
+  background: #1e293b;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 20px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.sendBtn:disabled {
+  opacity: 0.6;
+}

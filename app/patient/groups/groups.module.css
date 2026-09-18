@@ -1,0 +1,54 @@
+.heading {
+  font-size: 24px;
+  font-weight: bold;
+  color: #14532d;
+  margin-bottom: 20px;
+}
+
+.empty {
+  color: #94a3b8;
+  font-size: 15px;
+  margin-top: 48px;
+  text-align: center;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 480px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.07);
+  border: 1px solid #e2e8f0;
+  transition: border-color 0.15s;
+}
+
+.card:hover {
+  border-color: #15803d;
+}
+
+.groupName {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+}
+
+.orgName {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-right: 12px;
+}
+
+.arrow {
+  color: #94a3b8;
+  font-size: 18px;
+}

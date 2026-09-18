@@ -10,6 +10,7 @@ type Addiction = { id: number; name: string }
 export default function ClientSetupPage() {
   const router = useRouter()
   const [fullName, setFullName] = useState('')
+  const [nickname, setNickname] = useState('')
   const [age, setAge] = useState('')
   const [sex, setSex] = useState(0)
   const [addictions, setAddictions] = useState<Addiction[]>([])
@@ -41,7 +42,7 @@ export default function ClientSetupPage() {
     try {
       const res = await apiFetch('/client/setup', {
         method: 'POST',
-        body: JSON.stringify({ full_name: fullName, age: age || null, sex, addictions: selectedAddictions }),
+        body: JSON.stringify({ full_name: fullName, nickname: nickname || null, age: age || null, sex, addictions: selectedAddictions }),
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? '保存に失敗しました'); return }
@@ -74,6 +75,15 @@ export default function ClientSetupPage() {
             placeholder="山田 太郎"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
+          />
+
+          <label className={styles.label}>ニックネーム（グループチャットで使用する名前）</label>
+          <input
+            className={styles.input}
+            type="text"
+            placeholder="例：たろう"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
           />
 
           <label className={styles.label}>年齢</label>
