@@ -10,24 +10,30 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .logo {
   color: #fff;
   font-size: 20px;
   font-weight: bold;
+  white-space: nowrap;
 }
 
 .navLinks {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
 }
 
 .navLinks a {
   color: rgba(255,255,255,0.8);
   font-size: 15px;
+  text-decoration: none;
   transition: color 0.2s;
+  white-space: nowrap;
 }
 
 .navLinks a:hover,
@@ -45,14 +51,94 @@
   font-size: 14px;
   cursor: pointer;
   transition: background 0.2s;
+  white-space: nowrap;
 }
 
 .logout:hover {
   background: rgba(255,255,255,0.25);
 }
 
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.hamburger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: #fff;
+  border-radius: 2px;
+  transition: all 0.2s;
+}
+
+.mobileMenu {
+  display: none;
+  background: #1e40af;
+  padding: 12px 24px 20px;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid rgba(255,255,255,0.15);
+}
+
+.mobileMenu a {
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.mobileMenu a:last-of-type {
+  border-bottom: none;
+}
+
+.mobileMenu a.active {
+  color: #fff;
+  font-weight: 600;
+}
+
+.mobileLogout {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 8px;
+  text-align: center;
+}
+
 .main {
   padding: 32px 24px;
   max-width: 1200px;
   margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .nav {
+    padding: 0 16px;
+  }
+
+  .navLinks {
+    display: none;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
+  .mobileMenu.open {
+    display: flex;
+  }
+
+  .main {
+    padding: 20px 16px;
+  }
 }

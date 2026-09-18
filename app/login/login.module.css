@@ -76,3 +76,13 @@
   font-size: 14px;
   text-align: center;
 }
+
+@media (max-width: 480px) {
+  .card {
+    padding: 28px 20px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+}

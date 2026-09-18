@@ -160,3 +160,32 @@
   text-align: center;
   padding: 48px;
 }
+
+@media (max-width: 640px) {
+  .tableHeader {
+    display: none;
+  }
+
+  .tableRow {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 16px;
+  }
+
+  .form {
+    max-width: 100%;
+  }
+
+  .resultCard {
+    max-width: 100%;
+  }
+
+  .formActions {
+    flex-direction: column;
+  }
+
+  .saveBtn {
+    width: 100%;
+    text-align: center;
+  }
+}

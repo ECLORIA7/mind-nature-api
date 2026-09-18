@@ -13,6 +13,9 @@
   padding: 0 24px;
   height: 56px;
   gap: 24px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .brand {
@@ -34,6 +37,7 @@
   padding: 6px 14px;
   border-radius: 6px;
   font-size: 14px;
+  white-space: nowrap;
 }
 
 .active {
@@ -55,6 +59,63 @@
   padding: 6px 14px;
   font-size: 14px;
   cursor: pointer;
+  white-space: nowrap;
+}
+
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  flex-direction: column;
+  gap: 5px;
+  margin-left: auto;
+}
+
+.hamburger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: #fff;
+  border-radius: 2px;
+}
+
+.mobileMenu {
+  display: none;
+  background: #1e293b;
+  padding: 12px 24px 20px;
+  flex-direction: column;
+  gap: 4px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.mobileMenu a {
+  color: rgba(255,255,255,0.85);
+  text-decoration: none;
+  font-size: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.mobileMenu a:last-of-type {
+  border-bottom: none;
+}
+
+.mobileMenu a.active {
+  color: #fff;
+  font-weight: 600;
+}
+
+.mobileLogout {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 8px;
 }
 
 .main {
@@ -63,4 +124,30 @@
   max-width: 1000px;
   width: 100%;
   margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .nav {
+    padding: 0 16px;
+  }
+
+  .links {
+    display: none;
+  }
+
+  .logout {
+    display: none;
+  }
+
+  .hamburger {
+    display: flex;
+  }
+
+  .mobileMenu.open {
+    display: flex;
+  }
+
+  .main {
+    padding: 20px 16px;
+  }
 }

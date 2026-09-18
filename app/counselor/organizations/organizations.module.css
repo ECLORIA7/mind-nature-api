@@ -289,3 +289,17 @@
   text-align: center;
   padding: 48px 0;
 }
+
+@media (max-width: 768px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .addMemberRow {
+    flex-wrap: wrap;
+  }
+
+  .select {
+    width: 100%;
+  }
+}

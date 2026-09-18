@@ -128,3 +128,22 @@
   font-size: 15px;
   cursor: pointer;
 }
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .section {
+    padding: 16px;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .saveBtn, .cancelBtn {
+    width: 100%;
+    text-align: center;
+  }
+}

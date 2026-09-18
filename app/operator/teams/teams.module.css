@@ -136,3 +136,22 @@
   font-size: 13px;
   color: #64748b;
 }
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .form {
+    max-width: 100%;
+  }
+
+  .formActions {
+    flex-direction: column;
+  }
+
+  .saveBtn {
+    width: 100%;
+    text-align: center;
+  }
+}
