@@ -29,7 +29,11 @@ export default function LoginPage() {
       }
       saveSession(data)
       if (data.user.role === 'patient') {
-        router.push('/patient/todo')
+        if (!data.user.profile_completed) {
+          router.push('/client/setup')
+        } else {
+          router.push('/patient/todo')
+        }
       } else {
         router.push('/counselor/patients')
       }

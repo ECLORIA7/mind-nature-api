@@ -25,6 +25,16 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'プロフィールが見つかりません' }, { status: 404 })
   }
 
+  let profile_completed = true
+  if (profile.role === 'patient') {
+    const { data: patient } = await supabaseAdmin
+      .from('patients')
+      .select('profile_completed')
+      .eq('id', data.user.id)
+      .single()
+    profile_completed = patient?.profile_completed ?? false
+  }
+
   return Response.json({
     access_token: data.session.access_token,
     refresh_token: data.session.refresh_token,
@@ -35,6 +45,7 @@ export async function POST(req: NextRequest) {
       role: profile.role,
       full_name: profile.full_name,
       hospital_id: profile.hospital_id,
+      profile_completed,
     },
   })
 }

@@ -39,7 +39,7 @@ export default function PatientsPage() {
               <p className={styles.meta}>{p.age ? `${p.age}歳` : ''} {p.sex === 1 ? '男性' : p.sex === 2 ? '女性' : ''}</p>
               <div className={styles.tags}>
                 {p.patient_addictions?.map((pa) => (
-                  <span key={pa.addiction_id} className={styles.tag}>{pa.addictions?.name}</span>
+                  <span key={pa.addiction_id} className={styles.tag}>{pa.addictions?.name}に関する悩み</span>
                 ))}
               </div>
             </div>

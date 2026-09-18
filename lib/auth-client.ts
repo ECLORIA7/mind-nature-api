@@ -6,6 +6,7 @@ export type User = {
   role: 'patient' | 'counselor' | 'admin'
   full_name: string
   hospital_id: number | null
+  profile_completed?: boolean
 }
 
 export function getUser(): User | null {
