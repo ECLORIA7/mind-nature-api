@@ -1,6 +1,9 @@
 import { NextRequest } from 'next/server'
+import { Resend } from 'resend'
 import { supabaseAdmin } from '@/lib/supabase'
 import { getAuthUser, requireCounselor } from '@/lib/auth'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 function generatePassword(): string {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -52,6 +55,30 @@ async function registerPatient(body: Record<string, unknown>, hospitalId: number
   })
 
   await supabaseAdmin.from('patients').insert({ id: userId, age: null, sex: 0, profile_completed: false })
+
+  await resend.emails.send({
+    from: 'MindNature <noreply@mind-nature.net>',
+    to: email,
+    subject: 'MindNature アカウント登録のご案内',
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
+        <h2 style="color:#15803d;">MindNature へようこそ</h2>
+        <p>カウンセラーよりアカウントが作成されました。</p>
+        <p>以下の情報でログインし、プロフィールを入力してください。</p>
+        <div style="background:#f0fdf4;border-radius:8px;padding:16px;margin:16px 0;">
+          <p style="margin:0 0 8px;"><strong>ログインURL：</strong><br>
+            <a href="https://app.mind-nature.net" style="color:#15803d;">https://app.mind-nature.net</a>
+          </p>
+          <p style="margin:0 0 8px;"><strong>メールアドレス：</strong><br>${email}</p>
+          <p style="margin:0;"><strong>仮パスワード：</strong><br>
+            <span style="font-size:20px;font-weight:bold;letter-spacing:0.05em;color:#15803d;">${password}</span>
+          </p>
+        </div>
+        <p>ログイン後、プロフィール入力画面が表示されます。<br>氏名・年齢・症状カテゴリーなどをご入力ください。</p>
+        <p style="color:#94a3b8;font-size:12px;">このメールに心当たりがない場合はご連絡ください。</p>
+      </div>
+    `,
+  })
 
   return Response.json({
     message: 'クライアントアカウントを作成しました',

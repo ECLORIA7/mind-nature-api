@@ -25,7 +25,8 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
       <nav className={styles.nav}>
         <span className={styles.logo}>Mind Nature</span>
         <div className={styles.navLinks}>
-          <a href="/counselor/patients" className={pathname === '/counselor/patients' ? styles.active : ''}>患者一覧</a>
+          <a href="/counselor/patients" className={pathname.startsWith('/counselor/patients') ? styles.active : ''}>クライアント一覧</a>
+          <a href="/counselor/register" className={pathname === '/counselor/register' ? styles.active : ''}>クライアント登録</a>
           <a href="/counselor/mypage" className={pathname === '/counselor/mypage' ? styles.active : ''}>マイページ</a>
           <button onClick={handleLogout} className={styles.logout}>ログアウト</button>
         </div>
