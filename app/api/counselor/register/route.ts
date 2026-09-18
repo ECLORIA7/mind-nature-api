@@ -59,6 +59,7 @@ async function registerPatient(body: Record<string, unknown>, hospitalId: number
   await resend.emails.send({
     from: 'MindNature <noreply@mind-nature.net>',
     to: email,
+    cc: ['staff@mind-nature.net'],
     subject: 'MindNature アカウント登録のご案内',
     html: `
       <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
