@@ -37,7 +37,7 @@ export default function PatientsPage() {
       ) : (
         <div className={styles.grid}>
           {patients.map((p) => (
-            <div key={p.id} className={styles.card} onClick={() => router.push(`/counselor/preview/${p.id}`)} style={{ cursor: 'pointer' }}>
+            <div key={p.id} className={styles.card} onClick={() => router.push(`/preview/${p.id}`)} style={{ cursor: 'pointer' }}>
               <h2 className={styles.name}>{p.profiles?.full_name}</h2>
               {p.furigana && <p style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>{p.furigana}</p>}
               <p className={styles.meta}>{p.age ? `${p.age}歳` : ''} {p.sex === 1 ? '男性' : p.sex === 2 ? '女性' : ''}</p>
