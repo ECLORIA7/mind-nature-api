@@ -20,7 +20,18 @@ export async function GET(req: NextRequest) {
     .select('id, rank, profiles(full_name, hospital_id, hospitals(name))')
     .order('rank')
 
-  return Response.json({ counselors: counselors ?? [] })
+  const ids = (counselors ?? []).map((c) => c.id)
+  const emailMap: Record<string, string> = {}
+  if (ids.length > 0) {
+    for (const id of ids) {
+      const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(id)
+      if (authUser?.user?.email) emailMap[id] = authUser.user.email
+    }
+  }
+
+  const enriched = (counselors ?? []).map((c) => ({ ...c, email: emailMap[c.id] ?? '' }))
+
+  return Response.json({ counselors: enriched })
 }
 
 export async function POST(req: NextRequest) {

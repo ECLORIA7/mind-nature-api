@@ -6,7 +6,7 @@ import styles from './counselors.module.css'
 
 type Team = { id: number; name: string }
 type Counselor = {
-  id: string; rank: number
+  id: string; rank: number; email: string
   profiles: { full_name: string; hospital_id: number | null; hospitals?: { name: string } }
 }
 
@@ -107,7 +107,7 @@ export default function CounselorsPage() {
         {counselors.map((c) => (
           <div key={c.id} className={styles.tableRow}>
             <span className={styles.name}>{c.profiles?.full_name}</span>
-            <span className={styles.email}>{c.id}</span>
+            <span className={styles.email}>{c.email}</span>
             <select className={styles.rowSelect} value={c.profiles?.hospital_id ?? ''} onChange={(e) => setTeam(c.id, e.target.value ? Number(e.target.value) : null)}>
               <option value="">未所属</option>
               {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
