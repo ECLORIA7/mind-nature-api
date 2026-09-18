@@ -6,8 +6,14 @@ import styles from './counselors.module.css'
 
 type Team = { id: number; name: string }
 type Counselor = {
-  id: string; rank: number; email: string
+  id: string; rank: number; email: string; created_at: string
   profiles: { full_name: string; hospital_id: number | null; hospitals?: { name: string } }
+}
+
+function formatDate(iso: string) {
+  if (!iso) return '—'
+  const d = new Date(iso)
+  return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}`
 }
 
 export default function CounselorsPage() {
@@ -101,7 +107,7 @@ export default function CounselorsPage() {
 
       <div className={styles.table}>
         <div className={styles.tableHeader}>
-          <span>氏名</span><span>メール</span><span>チーム</span><span>役割</span>
+          <span>氏名</span><span>メール</span><span>チーム</span><span>役割</span><span>登録日</span>
         </div>
         {counselors.length === 0 && <p className={styles.empty}>カウンセラーが登録されていません</p>}
         {counselors.map((c) => (
@@ -116,6 +122,7 @@ export default function CounselorsPage() {
               <option value={1}>カウンセラー</option>
               <option value={0}>管理者</option>
             </select>
+            <span style={{ fontSize: 13, color: '#64748b' }}>{formatDate(c.created_at)}</span>
           </div>
         ))}
       </div>

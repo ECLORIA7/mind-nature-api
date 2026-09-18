@@ -13,6 +13,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}))
   const full_name = String(body.full_name ?? '').trim()
+  const furigana = body.furigana ? String(body.furigana).trim() : null
   const nickname = body.nickname ? String(body.nickname).trim() : null
   const age = body.age ? String(body.age) : null
   const sex = body.sex ? Number(body.sex) : 0
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
 
   await supabaseAdmin
     .from('patients')
-    .update({ age, sex, profile_completed: true, nickname })
+    .update({ age, sex, profile_completed: true, nickname, furigana })
     .eq('id', user!.id)
 
   if (addictions.length) {

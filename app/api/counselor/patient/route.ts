@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
   const { data: patient } = await supabaseAdmin
     .from('patients')
-    .select('age, sex, address, daily_rhythm, interests, profession, work_history, personal_relations, harsh_childhood, criminal_record, other_traumas, supplement, goals, counselor_supplement, counselor_findings, counselor_history')
+    .select('age, sex, furigana, nickname, address, daily_rhythm, interests, profession, work_history, personal_relations, harsh_childhood, criminal_record, other_traumas, supplement, goals, counselor_supplement, counselor_findings, counselor_history')
     .eq('id', patientId)
     .single()
 

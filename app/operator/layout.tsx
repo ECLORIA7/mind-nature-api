@@ -26,6 +26,7 @@ export default function OperatorLayout({ children }: { children: React.ReactNode
   const links = [
     { href: '/operator/teams', label: 'チーム管理', active: pathname.startsWith('/operator/teams') },
     { href: '/operator/counselors', label: 'カウンセラー管理', active: pathname.startsWith('/operator/counselors') },
+    { href: '/operator/clients', label: 'クライアント一覧', active: pathname.startsWith('/operator/clients') },
   ]
 
   return (

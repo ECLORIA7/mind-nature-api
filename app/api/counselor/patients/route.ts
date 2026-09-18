@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   let query = supabaseAdmin
     .from('patients')
     .select(`
-      id, age, sex,
+      id, age, sex, furigana,
       profiles ( full_name, hospital_id, hospitals ( name ) ),
       patient_addictions ( addiction_id, addictions ( name, short_name ) ),
       patient_counselors ( counselor_id, counselors ( profiles ( full_name ) ) )

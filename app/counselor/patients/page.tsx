@@ -10,6 +10,7 @@ type Patient = {
   id: string
   age: string | null
   sex: number
+  furigana: string | null
   profiles: { full_name: string; hospital_id: number }
   patient_addictions: Addiction[]
 }
@@ -38,6 +39,7 @@ export default function PatientsPage() {
           {patients.map((p) => (
             <div key={p.id} className={styles.card} onClick={() => router.push(`/counselor/patients/${p.id}`)} style={{ cursor: 'pointer' }}>
               <h2 className={styles.name}>{p.profiles?.full_name}</h2>
+              {p.furigana && <p style={{ fontSize: 11, color: '#94a3b8', marginBottom: 2 }}>{p.furigana}</p>}
               <p className={styles.meta}>{p.age ? `${p.age}歳` : ''} {p.sex === 1 ? '男性' : p.sex === 2 ? '女性' : ''}</p>
               <div className={styles.tags}>
                 {p.patient_addictions?.map((pa) => (

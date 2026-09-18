@@ -10,7 +10,7 @@ export async function GET(req: NextRequest) {
 
   const { data: patient } = await supabaseAdmin
     .from('patients')
-    .select('age, sex, nickname, address, daily_rhythm, interests, profession, work_history, personal_relations, harsh_childhood, criminal_record, other_traumas, supplement, goals, holiday')
+    .select('age, sex, furigana, nickname, address, daily_rhythm, interests, profession, work_history, personal_relations, harsh_childhood, criminal_record, other_traumas, supplement, goals, holiday')
     .eq('id', user!.id)
     .single()
 
@@ -40,7 +40,7 @@ export async function PATCH(req: NextRequest) {
   if (user!.role !== 'patient') return Response.json({ error: '権限がありません' }, { status: 403 })
 
   const body = await req.json().catch(() => ({}))
-  const { full_name, age, sex, nickname, address, daily_rhythm, interests, profession, work_history,
+  const { full_name, age, sex, furigana, nickname, address, daily_rhythm, interests, profession, work_history,
     personal_relations, harsh_childhood, criminal_record, other_traumas, supplement, goals, holiday, symptom_details } = body
 
   if (full_name !== undefined) {
@@ -50,6 +50,7 @@ export async function PATCH(req: NextRequest) {
   await supabaseAdmin.from('patients').update({
     ...(age !== undefined && { age }),
     ...(sex !== undefined && { sex }),
+    ...(furigana !== undefined && { furigana }),
     ...(nickname !== undefined && { nickname }),
     ...(address !== undefined && { address }),
     ...(daily_rhythm !== undefined && { daily_rhythm }),

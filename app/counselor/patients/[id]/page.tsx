@@ -6,7 +6,7 @@ import { apiFetch } from '@/lib/auth-client'
 import styles from './detail.module.css'
 
 type Patient = {
-  age: string; sex: number; address: string; daily_rhythm: string; interests: string
+  age: string; sex: number; furigana: string; nickname: string; address: string; daily_rhythm: string; interests: string
   profession: string; work_history: string; personal_relations: string; harsh_childhood: string
   criminal_record: string; other_traumas: string; supplement: string; goals: string
   counselor_supplement: string; counselor_findings: string; counselor_history: string
@@ -72,6 +72,7 @@ export default function PatientDetailPage() {
         <div className={styles.grid}>
           {[
             ['年齢', patient?.age], ['性別', sexLabel(patient?.sex ?? 0)],
+            ['フリガナ', patient?.furigana], ['ニックネーム', patient?.nickname],
             ['住所', patient?.address], ['職業', patient?.profession],
             ['職歴', patient?.work_history], ['趣味', patient?.interests],
             ['生活リズム', patient?.daily_rhythm], ['人間関係', patient?.personal_relations],

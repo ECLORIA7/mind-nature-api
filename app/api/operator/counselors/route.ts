@@ -22,14 +22,22 @@ export async function GET(req: NextRequest) {
 
   const ids = (counselors ?? []).map((c) => c.id)
   const emailMap: Record<string, string> = {}
+  const createdAtMap: Record<string, string> = {}
   if (ids.length > 0) {
     for (const id of ids) {
       const { data: authUser } = await supabaseAdmin.auth.admin.getUserById(id)
-      if (authUser?.user?.email) emailMap[id] = authUser.user.email
+      if (authUser?.user) {
+        emailMap[id] = authUser.user.email ?? ''
+        createdAtMap[id] = authUser.user.created_at
+      }
     }
   }
 
-  const enriched = (counselors ?? []).map((c) => ({ ...c, email: emailMap[c.id] ?? '' }))
+  const enriched = (counselors ?? []).map((c) => ({
+    ...c,
+    email: emailMap[c.id] ?? '',
+    created_at: createdAtMap[c.id] ?? '',
+  }))
 
   return Response.json({ counselors: enriched })
 }
