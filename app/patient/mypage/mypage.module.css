@@ -1,0 +1,33 @@
+.heading {
+  font-size: 24px;
+  font-weight: bold;
+  color: #14532d;
+  margin-bottom: 24px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 400px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.role {
+  font-size: 12px;
+  color: #15803d;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.name {
+  font-size: 22px;
+  font-weight: bold;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.email {
+  font-size: 14px;
+  color: #64748b;
+}

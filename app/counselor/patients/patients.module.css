@@ -1,0 +1,52 @@
+.heading {
+  font-size: 24px;
+  font-weight: bold;
+  color: #1e293b;
+  margin-bottom: 24px;
+}
+
+.empty {
+  color: #94a3b8;
+  text-align: center;
+  margin-top: 48px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 4px;
+}
+
+.meta {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag {
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 20px;
+  padding: 4px 10px;
+  font-size: 12px;
+}
