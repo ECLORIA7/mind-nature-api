@@ -32,7 +32,9 @@ export async function GET(req: NextRequest) {
   const addictionMap: Record<string, { id: number; name: string }[]> = {}
   for (const row of (addictions ?? [])) {
     if (!addictionMap[row.patient_id]) addictionMap[row.patient_id] = []
-    if (row.addictions) addictionMap[row.patient_id].push(row.addictions as { id: number; name: string })
+    if (row.addictions && !Array.isArray(row.addictions)) {
+      addictionMap[row.patient_id].push(row.addictions as unknown as { id: number; name: string })
+    }
   }
 
   const { data: allAddictions } = await supabaseAdmin
