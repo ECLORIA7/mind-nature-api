@@ -125,7 +125,7 @@ export default function OperatorClientsPage() {
         {filtered.length === 0 && <p className={styles.empty}>該当するクライアントがいません</p>}
 
         {filtered.map((c) => (
-          <div key={c.id} className={styles.tableRow} onClick={() => router.push(`/operator/clients/${c.id}`)} style={{ cursor: 'pointer' }}>
+          <div key={c.id} className={styles.tableRow} onClick={() => router.push(`/preview/${c.id}`)} style={{ cursor: 'pointer' }}>
             <div className={styles.nameCell}>
               <span className={styles.name}>{c.full_name || '（未設定）'}</span>
               {c.furigana && <span className={styles.furigana}>{c.furigana}</span>}
