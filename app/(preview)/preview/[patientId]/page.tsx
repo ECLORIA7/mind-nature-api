@@ -56,11 +56,19 @@ export default function PreviewPage() {
 
   // 行動の記録
   const [behaviorAddicId, setBehaviorAddicId] = useState<number | null>(null)
+  const [behaviorView, setBehaviorView] = useState<'month' | 'day'>('month')
   const [behaviorYear, setBehaviorYear] = useState(new Date().getFullYear())
   const [behaviorMonth, setBehaviorMonth] = useState(new Date().getMonth() + 1)
+  const [behaviorDate, setBehaviorDate] = useState(new Date().toLocaleDateString('sv-SE'))
   const [behaviorCalendar, setBehaviorCalendar] = useState<Record<string, { abstained: boolean | null; has_entries: boolean }>>({})
   const [behaviorStreak, setBehaviorStreak] = useState(0)
   const [behaviorLoading, setBehaviorLoading] = useState(false)
+  const [behaviorDayRecord, setBehaviorDayRecord] = useState<{ abstained: boolean } | null>(null)
+  const [behaviorDayEntries, setBehaviorDayEntries] = useState<{
+    id: string; start_time: string; end_time: string | null
+    location: string | null; companions: string | null; mood: string | null
+    drinks: { type: string; amount: string }[]; notes: string | null
+  }[]>([])
 
   // Load core patient data
   useEffect(() => {
@@ -113,15 +121,25 @@ export default function PreviewPage() {
       .finally(() => setGroupsLoaded(true))
   }, [activeTab, patientId, groupsLoaded])
 
-  // Load behavior calendar
+  // Load behavior calendar (月間)
   useEffect(() => {
-    if (activeTab !== '行動の記録' || !behaviorAddicId) return
+    if (activeTab !== '行動の記録' || !behaviorAddicId || behaviorView !== 'month') return
     setBehaviorLoading(true)
     apiFetch(`/patient/behavior/calendar?addiction_id=${behaviorAddicId}&year=${behaviorYear}&month=${behaviorMonth}&patient_id=${patientId}`)
       .then((r) => r.json())
       .then((d) => { setBehaviorCalendar(d.calendar ?? {}); setBehaviorStreak(d.current_streak ?? 0) })
       .finally(() => setBehaviorLoading(false))
-  }, [activeTab, patientId, behaviorAddicId, behaviorYear, behaviorMonth])
+  }, [activeTab, patientId, behaviorAddicId, behaviorYear, behaviorMonth, behaviorView])
+
+  // Load behavior day data (日別)
+  useEffect(() => {
+    if (activeTab !== '行動の記録' || !behaviorAddicId || behaviorView !== 'day') return
+    setBehaviorLoading(true)
+    apiFetch(`/patient/behavior/daily?addiction_id=${behaviorAddicId}&date=${behaviorDate}&patient_id=${patientId}`)
+      .then((r) => r.json())
+      .then((d) => { setBehaviorDayRecord(d.daily); setBehaviorDayEntries(d.entries ?? []) })
+      .finally(() => setBehaviorLoading(false))
+  }, [activeTab, patientId, behaviorAddicId, behaviorDate, behaviorView])
 
   // behavior 初期 addiction
   useEffect(() => {
@@ -284,31 +302,32 @@ export default function PreviewPage() {
         {/* ===== 行動の記録 ===== */}
         {activeTab === '行動の記録' && (() => {
           const DOW = ['日', '月', '火', '水', '木', '金', '土']
-          const firstDay = new Date(behaviorYear, behaviorMonth - 1, 1).getDay()
-          const lastDate = new Date(behaviorYear, behaviorMonth, 0).getDate()
-          const grid: (number | null)[] = [...Array(firstDay).fill(null)]
-          for (let d = 1; d <= lastDate; d++) grid.push(d)
           const todayStr = new Date().toLocaleDateString('sv-SE')
-          function marker(dateStr: string) {
+
+          function calMarker(dateStr: string) {
             const rec = behaviorCalendar[dateStr]
             if (!rec) return ''
             if (rec.abstained === true) {
-              let streak = 0
-              const d = new Date(dateStr)
+              let streak = 0; const d = new Date(dateStr)
               while (behaviorCalendar[d.toLocaleDateString('sv-SE')]?.abstained === true) { streak++; d.setDate(d.getDate() - 1) }
               return streak % 7 === 0 ? '🌸' : '⭕'
             }
             return '❌'
           }
-          function prevMonth() {
-            if (behaviorMonth === 1) { setBehaviorYear(y => y - 1); setBehaviorMonth(12) } else setBehaviorMonth(m => m - 1)
-          }
-          function nextMonth() {
-            if (behaviorMonth === 12) { setBehaviorYear(y => y + 1); setBehaviorMonth(1) } else setBehaviorMonth(m => m + 1)
-          }
+
+          const firstDay = new Date(behaviorYear, behaviorMonth - 1, 1).getDay()
+          const lastDate = new Date(behaviorYear, behaviorMonth, 0).getDate()
+          const grid: (number | null)[] = [...Array(firstDay).fill(null)]
+          for (let d = 1; d <= lastDate; d++) grid.push(d)
+
+          const dayLabel = new Date(behaviorDate + 'T00:00:00')
+            .toLocaleDateString('ja-JP', { month: 'long', day: 'numeric', weekday: 'short' })
+
           return (
             <div>
               <h1 className={styles.heading}>行動の記録</h1>
+
+              {/* 症状タブ */}
               {addictions.length > 1 && (
                 <div className={styles.addictionTabs} style={{ marginBottom: 12 }}>
                   {addictions.map((a) => (
@@ -319,39 +338,111 @@ export default function PreviewPage() {
                   ))}
                 </div>
               )}
+
+              {/* ストリーク */}
               {behaviorStreak > 0 && (
                 <div style={{ background: '#fef9c3', border: '1.5px solid #fbbf24', borderRadius: 12, padding: '10px 16px', marginBottom: 12, fontSize: 14, color: '#92400e', textAlign: 'center' }}>
                   🔥 断酒 <strong style={{ fontSize: 18 }}>{behaviorStreak}日</strong> 継続中
                 </div>
               )}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                <button className={styles.sendBtn} style={{ padding: '6px 14px', fontSize: 16 }} onClick={prevMonth}>‹</button>
-                <span style={{ fontWeight: 500 }}>{behaviorYear}年{behaviorMonth}月</span>
-                <button className={styles.sendBtn} style={{ padding: '6px 14px', fontSize: 16 }} onClick={nextMonth}>›</button>
+
+              {/* 月間 / 日別 切り替え */}
+              <div style={{ display: 'flex', background: '#dcfce7', borderRadius: 10, padding: 4, gap: 4, marginBottom: 12 }}>
+                {(['month', 'day'] as const).map((v) => (
+                  <button key={v}
+                    onClick={() => setBehaviorView(v)}
+                    style={{ flex: 1, padding: 8, border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer',
+                      background: behaviorView === v ? '#15803d' : 'none',
+                      color: behaviorView === v ? 'white' : '#15803d',
+                      fontWeight: behaviorView === v ? 500 : 400 }}
+                  >{v === 'month' ? '月間' : '日別'}</button>
+                ))}
               </div>
-              {behaviorLoading ? <p>読み込み中...</p> : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4 }}>
-                  {DOW.map((d, i) => (
-                    <div key={d} style={{ textAlign: 'center', fontSize: 11, color: i === 0 ? '#dc2626' : i === 6 ? '#2563eb' : '#64748b', padding: '4px 0' }}>{d}</div>
-                  ))}
-                  {grid.map((day, i) => {
-                    if (!day) return <div key={`e${i}`} />
-                    const dateStr = `${behaviorYear}-${String(behaviorMonth).padStart(2,'0')}-${String(day).padStart(2,'0')}`
-                    const isToday = dateStr === todayStr
-                    const isFuture = dateStr > todayStr
-                    const m = isFuture ? '' : marker(dateStr)
-                    return (
-                      <div key={day} style={{ aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: isToday ? '#15803d' : 'transparent' }}>
-                        {m && <span style={{ fontSize: 14, lineHeight: 1 }}>{m}</span>}
-                        <span style={{ fontSize: 11, lineHeight: 1, color: isToday ? 'white' : isFuture ? '#94a3b8' : '#334155' }}>{day}</span>
-                      </div>
-                    )
-                  })}
-                </div>
+
+              {/* ===== 月間カレンダー ===== */}
+              {behaviorView === 'month' && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <button className={styles.sendBtn} style={{ padding: '6px 14px', fontSize: 16 }}
+                      onClick={() => { if (behaviorMonth === 1) { setBehaviorYear(y => y-1); setBehaviorMonth(12) } else setBehaviorMonth(m => m-1) }}>‹</button>
+                    <span style={{ fontWeight: 500 }}>{behaviorYear}年{behaviorMonth}月</span>
+                    <button className={styles.sendBtn} style={{ padding: '6px 14px', fontSize: 16 }}
+                      onClick={() => { if (behaviorMonth === 12) { setBehaviorYear(y => y+1); setBehaviorMonth(1) } else setBehaviorMonth(m => m+1) }}>›</button>
+                  </div>
+                  {behaviorLoading ? <p>読み込み中...</p> : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4 }}>
+                      {DOW.map((d, i) => (
+                        <div key={d} style={{ textAlign: 'center', fontSize: 11, color: i===0?'#dc2626':i===6?'#2563eb':'#64748b', padding: '4px 0' }}>{d}</div>
+                      ))}
+                      {grid.map((day, i) => {
+                        if (!day) return <div key={`e${i}`} />
+                        const ds = `${behaviorYear}-${String(behaviorMonth).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+                        const isToday = ds === todayStr
+                        const isFuture = ds > todayStr
+                        const m = isFuture ? '' : calMarker(ds)
+                        return (
+                          <div key={day}
+                            onClick={() => { setBehaviorDate(ds); setBehaviorView('day') }}
+                            style={{ aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', cursor: 'pointer',
+                              background: isToday ? '#15803d' : 'transparent' }}>
+                            {m && <span style={{ fontSize: 14, lineHeight: 1 }}>{m}</span>}
+                            <span style={{ fontSize: 11, lineHeight: 1, color: isToday?'white':isFuture?'#94a3b8':'#334155' }}>{day}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', gap: 12, marginTop: 12, fontSize: 12, color: '#64748b' }}>
+                    <span>⭕ 断酒</span><span>🌸 7日達成</span><span>❌ 記録あり</span>
+                    <span style={{ marginLeft: 'auto', fontSize: 11 }}>日付をタップ→日別</span>
+                  </div>
+                </>
               )}
-              <div style={{ display: 'flex', gap: 12, marginTop: 12, fontSize: 12, color: '#64748b' }}>
-                <span>⭕ 断酒</span><span>🌸 7日達成</span><span>❌ 記録あり</span>
-              </div>
+
+              {/* ===== 日別ビュー ===== */}
+              {behaviorView === 'day' && (
+                <>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                    <button className={styles.sendBtn} style={{ padding: '6px 14px', fontSize: 16 }} onClick={() => {
+                      const d = new Date(behaviorDate); d.setDate(d.getDate()-1); setBehaviorDate(d.toLocaleDateString('sv-SE'))
+                    }}>‹</button>
+                    <span style={{ fontWeight: 500 }}>{dayLabel}</span>
+                    <button className={styles.sendBtn} style={{ padding: '6px 14px', fontSize: 16 }} onClick={() => {
+                      const d = new Date(behaviorDate); d.setDate(d.getDate()+1); setBehaviorDate(d.toLocaleDateString('sv-SE'))
+                    }}>›</button>
+                  </div>
+                  {behaviorLoading ? <p>読み込み中...</p> : (
+                    <>
+                      {behaviorDayRecord?.abstained && (
+                        <div style={{ background: '#dcfce7', border: '1.5px solid #86efac', borderRadius: 12, padding: '12px 16px', marginBottom: 12, color: '#15803d', fontWeight: 500, textAlign: 'center' }}>
+                          ⭕ この日は断酒できました
+                        </div>
+                      )}
+                      {behaviorDayEntries.length === 0 && !behaviorDayRecord && (
+                        <p style={{ textAlign: 'center', color: '#94a3b8', padding: '32px 0', fontSize: 14 }}>記録がありません</p>
+                      )}
+                      {behaviorDayEntries.map((e) => (
+                        <div key={e.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: 14, marginBottom: 10 }}>
+                          <div style={{ fontSize: 15, fontWeight: 600, color: '#15803d', marginBottom: 8 }}>
+                            {e.start_time.slice(0,5)}〜{e.end_time ? e.end_time.slice(0,5) : '？'}
+                          </div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 6 }}>
+                            {[e.location, e.companions, e.mood].filter(Boolean).map((v, i) => (
+                              <span key={i} style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 20, padding: '3px 10px', fontSize: 12, color: '#15803d' }}>{v}</span>
+                            ))}
+                          </div>
+                          {e.drinks?.length > 0 && (
+                            <div style={{ fontSize: 13, color: '#334155' }}>
+                              {e.drinks.map((d, i) => <span key={i}>{d.type}{d.amount ? `（${d.amount}）` : ''}{i < e.drinks.length-1 ? '・' : ''}</span>)}
+                            </div>
+                          )}
+                          {e.notes && <p style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{e.notes}</p>}
+                        </div>
+                      ))}
+                    </>
+                  )}
+                </>
+              )}
             </div>
           )
         })()}
