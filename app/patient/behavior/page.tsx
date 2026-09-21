@@ -127,14 +127,18 @@ export default function BehaviorPage() {
 
   useEffect(() => { loadCalendar() }, [loadCalendar])
 
+  const [loadingDay, setLoadingDay] = useState(false)
+
   const loadDayData = useCallback(() => {
     if (!selAddicId) return
+    setLoadingDay(true)
     apiFetch(`/patient/behavior/daily?addiction_id=${selAddicId}&date=${viewDate}`)
       .then(r => r.json())
       .then(d => {
         setDayRecord(d.daily)
         setDayEntries(d.entries ?? [])
       })
+      .finally(() => setLoadingDay(false))
   }, [selAddicId, viewDate])
 
   useEffect(() => {
@@ -441,15 +445,23 @@ export default function BehaviorPage() {
             }}>›</button>
           </div>
 
+          {/* ローディング */}
+          {loadingDay && (
+            <div className={styles.loadingWrap}>
+              <span className={styles.spinner} />
+              <span className={styles.loadingText}>読み込み中...</span>
+            </div>
+          )}
+
           {/* 断酒記録済み */}
-          {dayRecord?.abstained === true && (
+          {!loadingDay && dayRecord?.abstained === true && (
             <div className={styles.abstainedBadge}>
               ⭕ この日は断酒できました！
             </div>
           )}
 
           {/* 飲酒エントリー一覧 */}
-          {isAlcoMode && dayEntries.map(entry => (
+          {!loadingDay && isAlcoMode && dayEntries.map(entry => (
             <div key={entry.id} className={styles.entryCard}>
               <div className={styles.entryTop}>
                 <span className={styles.entryTime}>
@@ -476,7 +488,7 @@ export default function BehaviorPage() {
             </div>
           ))}
 
-          {!dayRecord && dayEntries.length === 0 && (
+          {!loadingDay && !dayRecord && dayEntries.length === 0 && (
             <p className={styles.noRecord}>まだ記録がありません</p>
           )}
 
