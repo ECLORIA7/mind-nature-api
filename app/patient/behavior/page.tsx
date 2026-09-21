@@ -71,6 +71,7 @@ export default function BehaviorPage() {
   const [endTimeInput, setEndTimeInput] = useState('')
   const [showEndTimeModal, setShowEndTimeModal] = useState(false)
   const [celebration, setCelebration] = useState<null | '7days' | '30days' | '365days'>(null)
+  const [saving, setSaving] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   // 症状カテゴリー取得
@@ -153,7 +154,8 @@ export default function BehaviorPage() {
   }
 
   async function handleSaveAbstained() {
-    if (!selAddicId) return
+    if (!selAddicId || saving) return
+    setSaving(true)
     const res = await apiFetch('/patient/behavior/daily', {
       method: 'POST',
       body: JSON.stringify({ addiction_id: selAddicId, date: viewDate, abstained: true })
@@ -173,10 +175,12 @@ export default function BehaviorPage() {
     } else if (streak > 0 && streak % 7 === 0) {
       setCelebration('7days')
     }
+    setSaving(false)
   }
 
   async function handleSaveDrinking() {
-    if (!selAddicId || !form.startTime) return
+    if (!selAddicId || !form.startTime || saving) return
+    setSaving(true)
     // 「その他」のカスタム選択肢を登録
     if (otherInput.location && form.location === '__other__') {
       await saveCustomOption('location', otherInput.location)
@@ -204,6 +208,7 @@ export default function BehaviorPage() {
         notes: form.notes || null,
       })
     })
+    setSaving(false)
     closeModal()
     loadCalendar()
     if (viewMode === 'day') loadDayData()
@@ -481,8 +486,8 @@ export default function BehaviorPage() {
                   {isAlcoMode ? (
                     <>
                       <button className={styles.choiceBtn} onClick={() => setModalStep(1)}>飲んだ</button>
-                      <button className={`${styles.choiceBtn} ${styles.choiceBtnGood}`} onClick={handleSaveAbstained}>
-                        飲まなかった ⭕
+                      <button className={`${styles.choiceBtn} ${styles.choiceBtnGood}`} onClick={handleSaveAbstained} disabled={saving}>
+                        {saving ? '保存中...' : '飲まなかった ⭕'}
                       </button>
                     </>
                   ) : (
@@ -494,8 +499,8 @@ export default function BehaviorPage() {
                         })
                         closeModal(); loadCalendar(); if (viewMode === 'day') loadDayData()
                       }}>あった</button>
-                      <button className={`${styles.choiceBtn} ${styles.choiceBtnGood}`} onClick={handleSaveAbstained}>
-                        なかった ⭕
+                      <button className={`${styles.choiceBtn} ${styles.choiceBtnGood}`} onClick={handleSaveAbstained} disabled={saving}>
+                        {saving ? '保存中...' : 'なかった ⭕'}
                       </button>
                     </>
                   )}
@@ -660,9 +665,9 @@ export default function BehaviorPage() {
                 </div>
                 <button
                   className={styles.nextBtn}
-                  disabled={form.drinkTypes.length === 0}
+                  disabled={form.drinkTypes.length === 0 || saving}
                   onClick={handleSaveDrinking}
-                >記録する</button>
+                >{saving ? '保存中...' : '記録する'}</button>
               </div>
             )}
           </div>
