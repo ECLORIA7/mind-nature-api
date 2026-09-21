@@ -430,6 +430,37 @@
   border-color: #15803d;
 }
 
+.timePicker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.timeSelect {
+  flex: 1;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 8px;
+  font-size: 20px;
+  background: #f8fafc;
+  color: #1e293b;
+  text-align: center;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+.timeSelect:focus {
+  outline: none;
+  border-color: #15803d;
+}
+
+.timeSep {
+  font-size: 22px;
+  font-weight: 700;
+  color: #334155;
+}
+
 .otherInput {
   width: 100%;
   border: 1.5px solid #e2e8f0;

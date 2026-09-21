@@ -29,6 +29,30 @@ function isAlcohol(name: string) {
   return /アルコール|飲酒|お酒|酒/.test(name)
 }
 
+function TimeSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [h, m] = value ? value.split(':') : ['', '']
+  const hours = Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0'))
+  const mins = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0'))
+  function update(newH: string, newM: string) {
+    if (newH && newM) onChange(`${newH}:${newM}`)
+    else if (newH) onChange(newH + ':' + (m || '00'))
+    else if (newM) onChange((h || '00') + ':' + newM)
+  }
+  return (
+    <div className={styles.timePicker}>
+      <select className={styles.timeSelect} value={h || ''} onChange={e => update(e.target.value, m)}>
+        <option value="">時</option>
+        {hours.map(hh => <option key={hh} value={hh}>{hh}</option>)}
+      </select>
+      <span className={styles.timeSep}>:</span>
+      <select className={styles.timeSelect} value={m || ''} onChange={e => update(h, e.target.value)}>
+        <option value="">分</option>
+        {mins.map(mm => <option key={mm} value={mm}>{mm}</option>)}
+      </select>
+    </div>
+  )
+}
+
 function toDateStr(d: Date) {
   return d.toLocaleDateString('sv-SE')
 }
@@ -523,19 +547,9 @@ export default function BehaviorPage() {
             {modalStep === 1 && (
               <div>
                 <p className={styles.fieldLabel}>飲み始めた時刻</p>
-                <input
-                  type="time"
-                  className={styles.timeInput}
-                  value={form.startTime}
-                  onChange={e => setForm(f => ({ ...f, startTime: e.target.value }))}
-                />
+                <TimeSelect value={form.startTime} onChange={v => setForm(f => ({ ...f, startTime: v }))} />
                 <p className={styles.fieldLabel} style={{ marginTop: 16 }}>終了時刻（後で入力もOK）</p>
-                <input
-                  type="time"
-                  className={styles.timeInput}
-                  value={form.endTime}
-                  onChange={e => setForm(f => ({ ...f, endTime: e.target.value }))}
-                />
+                <TimeSelect value={form.endTime} onChange={v => setForm(f => ({ ...f, endTime: v }))} />
                 <button className={styles.nextBtn} onClick={() => setModalStep(2)}>次へ</button>
               </div>
             )}
@@ -683,12 +697,7 @@ export default function BehaviorPage() {
               <button className={styles.closeBtn} onClick={() => setShowEndTimeModal(false)}>×</button>
             </div>
             <p className={styles.fieldLabel}>何時に終わりましたか？</p>
-            <input
-              type="time"
-              className={styles.timeInput}
-              value={endTimeInput}
-              onChange={e => setEndTimeInput(e.target.value)}
-            />
+            <TimeSelect value={endTimeInput} onChange={v => setEndTimeInput(v)} />
             <button className={styles.nextBtn} disabled={!endTimeInput} onClick={handleSaveEndTime}>保存</button>
           </div>
         </div>
