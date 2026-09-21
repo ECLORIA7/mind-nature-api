@@ -76,7 +76,12 @@ export default function BehaviorPage() {
   // 症状カテゴリー取得
   useEffect(() => {
     apiFetch('/patient/info').then(r => r.json()).then(d => {
-      const addics: Addiction[] = d.addictions ?? []
+      const addics: Addiction[] = (d.patient?.patient_addictions ?? []).map(
+        (pa: { addiction_id: number; addictions: { name: string } }) => ({
+          id: pa.addiction_id,
+          name: pa.addictions?.name ?? '',
+        })
+      )
       setAddictions(addics)
       if (addics.length > 0) setSelAddicId(addics[0].id)
     })
