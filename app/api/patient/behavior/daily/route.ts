@@ -112,3 +112,32 @@ export async function POST(req: NextRequest) {
 
   return Response.json({ record: data, current_streak: currentStreak })
 }
+
+export async function DELETE(req: NextRequest) {
+  const user = await getAuthUser(req)
+  const authError = requireAuth(user)
+  if (authError) return authError
+
+  if (user!.role !== 'patient') {
+    return Response.json({ error: 'クライアントのみ削除できます' }, { status: 403 })
+  }
+
+  const params = req.nextUrl.searchParams
+  const addictionId = parseInt(params.get('addiction_id') ?? '0')
+  const date = params.get('date') ?? ''
+
+  if (!addictionId || !date) {
+    return Response.json({ error: 'addiction_id と date は必須です' }, { status: 400 })
+  }
+
+  const { error } = await supabaseAdmin
+    .from('behavior_daily')
+    .delete()
+    .eq('patient_id', user!.id)
+    .eq('addiction_id', addictionId)
+    .eq('record_date', date)
+
+  if (error) return Response.json({ error: error.message }, { status: 500 })
+
+  return Response.json({ ok: true })
+}

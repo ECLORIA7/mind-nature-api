@@ -253,6 +253,15 @@ export default function BehaviorPage() {
     loadCalendar()
   }
 
+  async function handleDeleteAbstained() {
+    if (!selAddicId) return
+    if (!confirm('断酒の記録を取り消しますか？')) return
+    setLoadingDay(true)
+    await apiFetch(`/patient/behavior/daily?addiction_id=${selAddicId}&date=${viewDate}`, { method: 'DELETE' })
+    loadDayData()
+    loadCalendar()
+  }
+
   async function handleSaveEndTime() {
     if (!editEntryId || !endTimeInput) return
     await apiFetch('/patient/behavior/entries', {
@@ -459,7 +468,8 @@ export default function BehaviorPage() {
           {/* 断酒記録済み */}
           {!loadingDay && dayRecord?.abstained === true && (
             <div className={styles.abstainedBadge}>
-              ⭕ この日は断酒できました！
+              <span>⭕ この日は断酒できました！</span>
+              <button className={styles.undoBtn} onClick={handleDeleteAbstained}>取り消す</button>
             </div>
           )}
 
