@@ -1,0 +1,609 @@
+.page {
+  padding-bottom: 100px;
+  min-height: 100vh;
+}
+
+.empty {
+  padding: 40px 16px;
+  text-align: center;
+  color: #64748b;
+  line-height: 2;
+}
+
+/* 症状タブ */
+.addicTabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px 0;
+  overflow-x: auto;
+}
+
+.addicTab {
+  background: #dcfce7;
+  border: 1.5px solid #86efac;
+  color: #15803d;
+  border-radius: 20px;
+  padding: 6px 18px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.addicTabActive {
+  background: #15803d;
+  border-color: #15803d;
+  color: white;
+  font-weight: 500;
+}
+
+/* ストリークバナー */
+.streakBanner {
+  margin: 10px 16px 0;
+  background: linear-gradient(135deg, #fef9c3, #fde68a);
+  border: 1.5px solid #fbbf24;
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: #92400e;
+  text-align: center;
+}
+
+.streakBanner strong {
+  font-size: 18px;
+  color: #b45309;
+}
+
+/* 月間 / 日別 切り替え */
+.viewToggle {
+  display: flex;
+  margin: 12px 16px 0;
+  background: #dcfce7;
+  border-radius: 10px;
+  padding: 4px;
+  gap: 4px;
+}
+
+.toggleBtn, .toggleActive {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.toggleBtn {
+  background: none;
+  color: #15803d;
+}
+
+.toggleActive {
+  background: #15803d;
+  color: white;
+  font-weight: 500;
+}
+
+/* 月間ビュー */
+.monthView {
+  padding: 0 0 16px;
+}
+
+.monthNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 8px;
+}
+
+.monthTitle {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.navBtn {
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+  color: #15803d;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* カレンダーグリッド */
+.calGrid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  padding: 0 10px;
+}
+
+.dow {
+  text-align: center;
+  font-size: 11px;
+  color: #64748b;
+  padding: 4px 0;
+}
+
+.sun { color: #dc2626; }
+.sat { color: #2563eb; }
+
+.calDay {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  cursor: pointer;
+  padding: 2px;
+  transition: background 0.1s;
+}
+
+.calDay:hover {
+  background: #dcfce7;
+}
+
+.calToday {
+  background: #15803d !important;
+}
+
+.calToday .dayNum {
+  color: white;
+}
+
+.calFuture .dayNum {
+  color: #94a3b8;
+}
+
+.marker {
+  font-size: 16px;
+  line-height: 1;
+}
+
+.dayNum {
+  font-size: 11px;
+  line-height: 1;
+  color: #334155;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 8px 16px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* FAB */
+.fabWrap {
+  display: flex;
+  justify-content: center;
+  padding: 16px;
+}
+
+.fab {
+  background: #15803d;
+  color: white;
+  border: none;
+  border-radius: 28px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(21, 128, 61, 0.35);
+}
+
+.fabPlus {
+  font-size: 20px;
+  font-weight: 300;
+}
+
+/* 日別ビュー */
+.dayView {
+  padding: 0 0 16px;
+}
+
+.abstainedBadge {
+  margin: 4px 16px 12px;
+  background: #dcfce7;
+  border: 1.5px solid #86efac;
+  border-radius: 12px;
+  padding: 12px 16px;
+  color: #15803d;
+  font-size: 15px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.entryCard {
+  margin: 0 16px 10px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.entryTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.entryTime {
+  font-size: 15px;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.endTimeBtn {
+  font-size: 12px;
+  border: 1.5px solid #15803d;
+  color: #15803d;
+  background: none;
+  padding: 4px 12px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.chip {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 12px;
+  color: #15803d;
+}
+
+.drinks {
+  font-size: 13px;
+  color: #334155;
+  margin-bottom: 4px;
+}
+
+.entryNotes {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.deleteBtn {
+  margin-top: 8px;
+  background: none;
+  border: none;
+  color: #dc2626;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0;
+}
+
+.noRecord {
+  text-align: center;
+  color: #94a3b8;
+  padding: 40px 16px;
+  font-size: 14px;
+}
+
+/* モーダル */
+.modalBg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.modal {
+  background: white;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 36px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.modalTitle {
+  font-size: 17px;
+  font-weight: 600;
+  color: #15803d;
+}
+
+.closeBtn {
+  background: #f1f5f9;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+
+/* ステップインジケーター */
+.stepDots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  transition: all 0.2s;
+}
+
+.dotActive {
+  background: #15803d;
+  width: 22px;
+  border-radius: 4px;
+}
+
+/* 選択ボタン */
+.choiceGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.choiceBtn {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 9px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  color: #334155;
+  transition: all 0.1s;
+}
+
+.choiceBtn:hover {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.choiceSel {
+  background: #dcfce7 !important;
+  border-color: #15803d !important;
+  color: #15803d !important;
+  font-weight: 500;
+}
+
+.choiceBtnGood {
+  background: #f0fdf4;
+  border-color: #86efac;
+  color: #15803d;
+  font-weight: 500;
+}
+
+.fieldLabel {
+  font-size: 12px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.timeInput {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 18px;
+  width: 100%;
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.timeInput:focus {
+  outline: none;
+  border-color: #15803d;
+}
+
+.otherInput {
+  width: 100%;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  margin-top: 8px;
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.otherInput:focus {
+  outline: none;
+  border-color: #15803d;
+}
+
+.notesInput {
+  width: 100%;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  resize: none;
+  background: #f8fafc;
+  color: #1e293b;
+  font-family: inherit;
+}
+
+.notesInput:focus {
+  outline: none;
+  border-color: #15803d;
+}
+
+.nextBtn {
+  width: 100%;
+  background: #15803d;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 16px;
+}
+
+.nextBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* コンフェッティキャンバス */
+.confettiCanvas {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* お祝いカード（7日・30日） */
+.celebBg {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.celebCard {
+  background: white;
+  border-radius: 20px;
+  padding: 32px 24px;
+  text-align: center;
+  max-width: 320px;
+  width: 100%;
+}
+
+.celebIcon {
+  font-size: 56px;
+  margin-bottom: 16px;
+}
+
+.celebTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #15803d;
+  margin-bottom: 12px;
+}
+
+.celebText {
+  font-size: 15px;
+  color: #475569;
+  line-height: 1.8;
+  margin-bottom: 24px;
+}
+
+.celebBtn {
+  background: #15803d;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 14px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 1年達成フルスクリーン */
+.yearCelebBg {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #14532d, #166534, #15803d);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.yearCelebContent {
+  text-align: center;
+  color: white;
+  max-width: 360px;
+}
+
+.yearCelebStars {
+  font-size: 28px;
+  letter-spacing: 8px;
+  margin-bottom: 16px;
+}
+
+.yearCelebIcon {
+  font-size: 80px;
+  margin-bottom: 16px;
+}
+
+.yearCelebTitle {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  line-height: 1.4;
+}
+
+.yearCelebText {
+  font-size: 16px;
+  line-height: 2;
+  margin-bottom: 32px;
+  opacity: 0.92;
+}
+
+.yearCelebBtn {
+  background: white;
+  color: #15803d;
+  border: none;
+  border-radius: 12px;
+  padding: 16px 32px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 480px) {
+  .modal {
+    border-radius: 16px 16px 0 0;
+    padding: 16px 16px 32px;
+  }
+
+  .fab {
+    padding: 12px 24px;
+    font-size: 14px;
+  }
+}
