@@ -71,6 +71,7 @@ function getDayMarker(streak7th: boolean, abstained: boolean | null, hasEntries:
 
 export default function BehaviorPage() {
   const [addictions, setAddictions] = useState<Addiction[]>([])
+  const [addicsLoading, setAddicsLoading] = useState(true)
   const [selAddicId, setSelAddicId] = useState<number | null>(null)
   const [viewMode, setViewMode] = useState<'month' | 'day'>('month')
   const [viewDate, setViewDate] = useState(todayStr())
@@ -109,7 +110,7 @@ export default function BehaviorPage() {
       )
       setAddictions(addics)
       if (addics.length > 0) setSelAddicId(addics[0].id)
-    })
+    }).finally(() => setAddicsLoading(false))
   }, [])
 
   const loadCalendar = useCallback(() => {
@@ -325,6 +326,10 @@ export default function BehaviorPage() {
   const compOptions = [...DEFAULT_COMPANIONS, ...(customOptions.companions ?? [])]
   const moodOptions = [...DEFAULT_MOODS, ...(customOptions.mood ?? [])]
   const drinkOptions = [...DEFAULT_DRINK_TYPES, ...(customOptions.drink_type ?? [])]
+
+  if (addicsLoading) {
+    return <div className={styles.empty}><p>読み込み中...</p></div>
+  }
 
   if (addictions.length === 0) {
     return (
