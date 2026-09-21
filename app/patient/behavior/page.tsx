@@ -192,6 +192,7 @@ export default function BehaviorPage() {
     const data = await res.json()
     const streak = data.current_streak ?? 0
     setCurrentStreak(streak)
+    if (viewMode === 'day') setLoadingDay(true)
     closeModal()
     loadCalendar()
     if (viewMode === 'day') loadDayData()
@@ -238,6 +239,7 @@ export default function BehaviorPage() {
       })
     })
     setSaving(false)
+    if (viewMode === 'day') setLoadingDay(true)
     closeModal()
     loadCalendar()
     if (viewMode === 'day') loadDayData()
@@ -245,6 +247,7 @@ export default function BehaviorPage() {
 
   async function handleDeleteEntry(id: string) {
     if (!confirm('この記録を削除しますか？')) return
+    setLoadingDay(true)
     await apiFetch(`/patient/behavior/entries?id=${id}`, { method: 'DELETE' })
     loadDayData()
     loadCalendar()
