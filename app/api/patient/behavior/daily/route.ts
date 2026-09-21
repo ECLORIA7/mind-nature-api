@@ -37,6 +37,16 @@ export async function GET(req: NextRequest) {
   return Response.json({ daily: daily ?? null, entries: entries ?? [] })
 }
 
+async function patientOwnsAddiction(patientId: string, addictionId: number): Promise<boolean> {
+  const { data } = await supabaseAdmin
+    .from('patient_addictions')
+    .select('addiction_id')
+    .eq('patient_id', patientId)
+    .eq('addiction_id', addictionId)
+    .maybeSingle()
+  return data !== null
+}
+
 export async function POST(req: NextRequest) {
   const user = await getAuthUser(req)
   const authError = requireAuth(user)
@@ -51,6 +61,10 @@ export async function POST(req: NextRequest) {
 
   if (!addiction_id || !date) {
     return Response.json({ error: 'addiction_id と date は必須です' }, { status: 400 })
+  }
+
+  if (!(await patientOwnsAddiction(user!.id, addiction_id))) {
+    return Response.json({ error: 'この症状カテゴリーはあなたのものではありません' }, { status: 403 })
   }
 
   const { data, error } = await supabaseAdmin

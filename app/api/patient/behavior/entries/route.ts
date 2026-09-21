@@ -18,6 +18,16 @@ export async function POST(req: NextRequest) {
     return Response.json({ error: 'addiction_id, date, start_time は必須です' }, { status: 400 })
   }
 
+  const { data: owned } = await supabaseAdmin
+    .from('patient_addictions')
+    .select('addiction_id')
+    .eq('patient_id', user!.id)
+    .eq('addiction_id', addiction_id)
+    .maybeSingle()
+  if (!owned) {
+    return Response.json({ error: 'この症状カテゴリーはあなたのものではありません' }, { status: 403 })
+  }
+
   const { data, error } = await supabaseAdmin
     .from('alcohol_entries')
     .insert({
