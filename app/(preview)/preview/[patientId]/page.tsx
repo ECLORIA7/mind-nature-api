@@ -20,8 +20,8 @@ type Todo = { id: string; title?: string; content?: string; completed: boolean }
 type Message = { id: string; poster_id: string; content: string; sequence_num: number; profiles?: { full_name: string } }
 type Group = { id: string; name: string; organizations?: { name: string } }
 
-type Tab = 'ToDo' | 'チャット' | 'グループ' | 'マイページ' | 'カウンセラー記録'
-const PATIENT_TABS: Tab[] = ['ToDo', 'チャット', 'グループ', 'マイページ']
+type Tab = 'ToDo' | '行動の記録' | 'チャット' | 'グループ' | 'マイページ' | 'カウンセラー記録'
+const PATIENT_TABS: Tab[] = ['ToDo', '行動の記録', 'チャット', 'グループ', 'マイページ']
 
 export default function PreviewPage() {
   const { patientId } = useParams<{ patientId: string }>()
@@ -53,6 +53,14 @@ export default function PreviewPage() {
   // Groups
   const [groups, setGroups] = useState<Group[]>([])
   const [groupsLoaded, setGroupsLoaded] = useState(false)
+
+  // 行動の記録
+  const [behaviorAddicId, setBehaviorAddicId] = useState<number | null>(null)
+  const [behaviorYear, setBehaviorYear] = useState(new Date().getFullYear())
+  const [behaviorMonth, setBehaviorMonth] = useState(new Date().getMonth() + 1)
+  const [behaviorCalendar, setBehaviorCalendar] = useState<Record<string, { abstained: boolean | null; has_entries: boolean }>>({})
+  const [behaviorStreak, setBehaviorStreak] = useState(0)
+  const [behaviorLoading, setBehaviorLoading] = useState(false)
 
   // Load core patient data
   useEffect(() => {
@@ -104,6 +112,21 @@ export default function PreviewPage() {
       .then((d) => setGroups(d.groups ?? []))
       .finally(() => setGroupsLoaded(true))
   }, [activeTab, patientId, groupsLoaded])
+
+  // Load behavior calendar
+  useEffect(() => {
+    if (activeTab !== '行動の記録' || !behaviorAddicId) return
+    setBehaviorLoading(true)
+    apiFetch(`/patient/behavior/calendar?addiction_id=${behaviorAddicId}&year=${behaviorYear}&month=${behaviorMonth}&patient_id=${patientId}`)
+      .then((r) => r.json())
+      .then((d) => { setBehaviorCalendar(d.calendar ?? {}); setBehaviorStreak(d.current_streak ?? 0) })
+      .finally(() => setBehaviorLoading(false))
+  }, [activeTab, patientId, behaviorAddicId, behaviorYear, behaviorMonth])
+
+  // behavior 初期 addiction
+  useEffect(() => {
+    if (addictions.length > 0 && !behaviorAddicId) setBehaviorAddicId(addictions[0].addiction_id)
+  }, [addictions, behaviorAddicId])
 
   const sendMessage = async () => {
     if (!chatInput.trim() || !selectedAddic) return
@@ -257,6 +280,81 @@ export default function PreviewPage() {
             )}
           </div>
         )}
+
+        {/* ===== 行動の記録 ===== */}
+        {activeTab === '行動の記録' && (() => {
+          const DOW = ['日', '月', '火', '水', '木', '金', '土']
+          const firstDay = new Date(behaviorYear, behaviorMonth - 1, 1).getDay()
+          const lastDate = new Date(behaviorYear, behaviorMonth, 0).getDate()
+          const grid: (number | null)[] = [...Array(firstDay).fill(null)]
+          for (let d = 1; d <= lastDate; d++) grid.push(d)
+          const todayStr = new Date().toLocaleDateString('sv-SE')
+          function marker(dateStr: string) {
+            const rec = behaviorCalendar[dateStr]
+            if (!rec) return ''
+            if (rec.abstained === true) {
+              let streak = 0
+              const d = new Date(dateStr)
+              while (behaviorCalendar[d.toLocaleDateString('sv-SE')]?.abstained === true) { streak++; d.setDate(d.getDate() - 1) }
+              return streak % 7 === 0 ? '🌸' : '⭕'
+            }
+            return '❌'
+          }
+          function prevMonth() {
+            if (behaviorMonth === 1) { setBehaviorYear(y => y - 1); setBehaviorMonth(12) } else setBehaviorMonth(m => m - 1)
+          }
+          function nextMonth() {
+            if (behaviorMonth === 12) { setBehaviorYear(y => y + 1); setBehaviorMonth(1) } else setBehaviorMonth(m => m + 1)
+          }
+          return (
+            <div>
+              <h1 className={styles.heading}>行動の記録</h1>
+              {addictions.length > 1 && (
+                <div className={styles.addictionTabs} style={{ marginBottom: 12 }}>
+                  {addictions.map((a) => (
+                    <button key={a.addiction_id}
+                      className={`${styles.addictionTab} ${behaviorAddicId === a.addiction_id ? styles.addictionTabActive : ''}`}
+                      onClick={() => setBehaviorAddicId(a.addiction_id)}
+                    >{a.addictions.name}</button>
+                  ))}
+                </div>
+              )}
+              {behaviorStreak > 0 && (
+                <div style={{ background: '#fef9c3', border: '1.5px solid #fbbf24', borderRadius: 12, padding: '10px 16px', marginBottom: 12, fontSize: 14, color: '#92400e', textAlign: 'center' }}>
+                  🔥 断酒 <strong style={{ fontSize: 18 }}>{behaviorStreak}日</strong> 継続中
+                </div>
+              )}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                <button className={styles.sendBtn} style={{ padding: '6px 14px', fontSize: 16 }} onClick={prevMonth}>‹</button>
+                <span style={{ fontWeight: 500 }}>{behaviorYear}年{behaviorMonth}月</span>
+                <button className={styles.sendBtn} style={{ padding: '6px 14px', fontSize: 16 }} onClick={nextMonth}>›</button>
+              </div>
+              {behaviorLoading ? <p>読み込み中...</p> : (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7,1fr)', gap: 4 }}>
+                  {DOW.map((d, i) => (
+                    <div key={d} style={{ textAlign: 'center', fontSize: 11, color: i === 0 ? '#dc2626' : i === 6 ? '#2563eb' : '#64748b', padding: '4px 0' }}>{d}</div>
+                  ))}
+                  {grid.map((day, i) => {
+                    if (!day) return <div key={`e${i}`} />
+                    const dateStr = `${behaviorYear}-${String(behaviorMonth).padStart(2,'0')}-${String(day).padStart(2,'0')}`
+                    const isToday = dateStr === todayStr
+                    const isFuture = dateStr > todayStr
+                    const m = isFuture ? '' : marker(dateStr)
+                    return (
+                      <div key={day} style={{ aspectRatio: '1', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', background: isToday ? '#15803d' : 'transparent' }}>
+                        {m && <span style={{ fontSize: 14, lineHeight: 1 }}>{m}</span>}
+                        <span style={{ fontSize: 11, lineHeight: 1, color: isToday ? 'white' : isFuture ? '#94a3b8' : '#334155' }}>{day}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: 12, marginTop: 12, fontSize: 12, color: '#64748b' }}>
+                <span>⭕ 断酒</span><span>🌸 7日達成</span><span>❌ 記録あり</span>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* ===== マイページ ===== */}
         {activeTab === 'マイページ' && (
