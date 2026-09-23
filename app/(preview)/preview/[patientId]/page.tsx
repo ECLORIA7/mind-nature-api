@@ -144,11 +144,13 @@ export default function PreviewPage() {
   }, [activeTab, patientId, testsLoaded])
 
   const toggleTest = async (testId: number, enabled: boolean) => {
-    await apiFetch('/counselor/patient/tests', {
+    setTests(prev => prev.map(t => t.id === testId ? { ...t, enabled } : t))
+    apiFetch('/counselor/patient/tests', {
       method: 'PUT',
       body: JSON.stringify({ patient_id: patientId, test_id: testId, enabled }),
+    }).catch(() => {
+      setTests(prev => prev.map(t => t.id === testId ? { ...t, enabled: !enabled } : t))
     })
-    setTestsLoaded(false)
   }
 
   // Load test detail
