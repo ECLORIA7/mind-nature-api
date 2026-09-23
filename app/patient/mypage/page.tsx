@@ -48,6 +48,13 @@ export default function PatientMyPage() {
   const [symptomForms, setSymptomForms] = useState<SymptomDetail[]>([])
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [pwOpen, setPwOpen] = useState(false)
+  const [currentPw, setCurrentPw] = useState('')
+  const [newPw, setNewPw] = useState('')
+  const [confirmPw, setConfirmPw] = useState('')
+  const [pwSaving, setPwSaving] = useState(false)
+  const [pwError, setPwError] = useState('')
+  const [pwDone, setPwDone] = useState(false)
 
   const fetchProfile = () =>
     apiFetch('/client/profile')
@@ -69,6 +76,23 @@ export default function PatientMyPage() {
 
   const setSymptom = (idx: number, key: string, val: string) =>
     setSymptomForms((prev) => prev.map((s, i) => i === idx ? { ...s, [key]: val } : s))
+
+  const handlePwChange = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setPwError('')
+    if (newPw !== confirmPw) { setPwError('新しいパスワードが一致しません'); return }
+    if (newPw.length < 8) { setPwError('パスワードは8文字以上にしてください'); return }
+    setPwSaving(true)
+    const res = await apiFetch('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ current_password: currentPw, new_password: newPw }),
+    })
+    const data = await res.json()
+    setPwSaving(false)
+    if (!res.ok) { setPwError(data.error ?? '変更に失敗しました'); return }
+    setPwDone(true)
+    setCurrentPw(''); setNewPw(''); setConfirmPw('')
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -177,6 +201,54 @@ export default function PatientMyPage() {
           <button className={styles.cancelBtn} onClick={() => setEditing(false)}>キャンセル</button>
         </div>
       )}
+
+      <div className={styles.section}>
+        <button
+          onClick={() => { setPwOpen((o) => !o); setPwDone(false); setPwError('') }}
+          style={{ background: 'none', border: 'none', fontSize: 15, fontWeight: 600, color: '#1e293b', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 8 }}
+        >
+          パスワードを変更する
+          <span style={{ fontSize: 12, color: '#94a3b8' }}>{pwOpen ? '▲' : '▼'}</span>
+        </button>
+
+        {pwOpen && (
+          <form onSubmit={handlePwChange} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400 }}>
+            {pwDone && <p style={{ color: '#15803d', fontSize: 14 }}>パスワードを変更しました</p>}
+            <input
+              type="password"
+              placeholder="現在のパスワード"
+              value={currentPw}
+              onChange={(e) => setCurrentPw(e.target.value)}
+              required
+              style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px', fontSize: 14 }}
+            />
+            <input
+              type="password"
+              placeholder="新しいパスワード（8文字以上）"
+              value={newPw}
+              onChange={(e) => setNewPw(e.target.value)}
+              required
+              style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px', fontSize: 14 }}
+            />
+            <input
+              type="password"
+              placeholder="新しいパスワード（確認）"
+              value={confirmPw}
+              onChange={(e) => setConfirmPw(e.target.value)}
+              required
+              style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px', fontSize: 14 }}
+            />
+            {pwError && <p style={{ color: '#ef4444', fontSize: 13 }}>{pwError}</p>}
+            <button
+              type="submit"
+              disabled={pwSaving}
+              style={{ background: '#1e40af', color: 'white', border: 'none', borderRadius: 8, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: pwSaving ? 0.6 : 1 }}
+            >
+              {pwSaving ? '変更中...' : 'パスワードを変更する'}
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   )
 }
