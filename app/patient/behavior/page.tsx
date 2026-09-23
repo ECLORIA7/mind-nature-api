@@ -104,6 +104,7 @@ export default function BehaviorPage() {
   const [showGamblingModal, setShowGamblingModal] = useState(false)
   const [gamblingForm, setGamblingForm] = useState({ time: '', location: '', trigger: '', amount_spent: '', amount_lost: '' })
   const [gamblingOther, setGamblingOther] = useState({ location: '', trigger: '' })
+  const [gamblingError, setGamblingError] = useState('')
 
   useEffect(() => {
     apiFetch('/patient/info').then(r => r.json()).then(d => {
@@ -307,11 +308,12 @@ export default function BehaviorPage() {
   async function handleSaveGamblingEntry() {
     if (!selAddicId || saving) return
     setSaving(true)
+    setGamblingError('')
     const loc = gamblingForm.location === '__other__' ? gamblingOther.location : gamblingForm.location
     const trig = gamblingForm.trigger === '__other__' ? gamblingOther.trigger : gamblingForm.trigger
     if (gamblingOther.location && gamblingForm.location === '__other__') await saveCustomOption('location', gamblingOther.location)
     if (gamblingOther.trigger && gamblingForm.trigger === '__other__') await saveCustomOption('mood', gamblingOther.trigger)
-    await apiFetch('/patient/behavior/gambling/entries', {
+    const res = await apiFetch('/patient/behavior/gambling/entries', {
       method: 'POST',
       body: JSON.stringify({
         addiction_id: selAddicId, date: viewDate,
@@ -321,7 +323,13 @@ export default function BehaviorPage() {
         amount_lost: Number(gamblingForm.amount_lost) || 0,
       })
     })
-    setShowGamblingModal(false); setGamblingForm({ time: '', location: '', trigger: '', amount_spent: '', amount_lost: '' }); setGamblingOther({ location: '', trigger: '' })
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      setGamblingError(data.error ?? '記録に失敗しました。もう一度お試しください。')
+      setSaving(false)
+      return
+    }
+    setShowGamblingModal(false); setGamblingForm({ time: '', location: '', trigger: '', amount_spent: '', amount_lost: '' }); setGamblingOther({ location: '', trigger: '' }); setGamblingError('')
     setSaving(false); loadCalendar(); if (viewMode === 'day') loadDayData()
   }
 
@@ -380,43 +388,48 @@ export default function BehaviorPage() {
     smoking: {
       title: '禁煙記録の使い方',
       steps: [
-        { icon: '🚬', text: '【吸いました（今）】ボタン\nタバコを吸ったら、すぐにこのボタンを押してください。今の時刻が自動で記録されます。' },
-        { icon: '🕐', text: '【後から記録】ボタン\n押し忘れた場合や、前の時間の記録をつけたいときに使います。吸った時刻を選んで記録できます。' },
-        { icon: '📍', text: '場所・きっかけの記録\n記録した後で「場所・きっかけを追記」を押すと、どこで・何がきっかけで吸ったかを記入できます。次回からの対策に役立ちます。' },
-        { icon: '⭕', text: '【吸わなかった】ボタン\n1日1本も吸わなかった日に押してください。カレンダーに⭕がつきます。' },
-        { icon: '🌸', text: '7日間連続で吸わないと🌸マークがつきます。続けることで花になっていきます！' },
-        { icon: '📅', text: 'カレンダーの数字\n毎日の喫煙本数がカレンダーに表示されます。日付を押すとその日の詳細が見られます。' },
+        { icon: '📱', text: 'この画面は「禁煙の記録をつける」ための画面です。\n毎日、吸ったかどうかをここに記録するだけでOKです。難しい操作はありません。' },
+        { icon: '🚬', text: '【吸いました（今）】赤いボタン\nタバコを吸ってしまったら、このボタンをすぐに押してください。押すと今の時刻が自動的に記録されます。たとえば「14:32に1本吸った」という記録がつきます。' },
+        { icon: '🕐', text: '【後から記録】グレーのボタン\n吸ったときにすぐ押せなかった場合に使います。押すと時刻を選ぶ画面が出ますので、吸った時間を選んで記録してください。' },
+        { icon: '📍', text: '場所・きっかけの追記\n記録した後に「場所・きっかけを追記」という文字を押すと、どこで吸ったか・何がきっかけだったかを入力できます。たとえば「ストレスがたまって吸ってしまった」など。カウンセラーと振り返るときに役立ちます。入力しなくても大丈夫です。' },
+        { icon: '⭕', text: '【吸わなかった ⭕】緑のボタン\n「今日は1本も吸わなかった！」という日に押してください。カレンダーに⭕マークがつきます。この⭕を増やしていくことが目標です。' },
+        { icon: '📅', text: 'カレンダーの見方\n上の「月間」タブを押すとカレンダーが表示されます。吸った日には本数が表示され、吸わなかった日には⭕がつきます。数字をタップするとその日の詳細が見られます。' },
+        { icon: '🌸', text: '7日間連続で吸わない日が続くと、カレンダーに🌸マークがつきます。まず7日間続けることを目標にしてみてください！' },
       ],
     },
     alcohol: {
       title: '飲酒記録の使い方',
       steps: [
-        { icon: '🍺', text: '【飲んだ】ボタン\n今日お酒を飲んだら押してください。飲み始めた時刻・場所・一緒にいた人・気分・お酒の種類を記録できます。' },
-        { icon: '⭕', text: '【飲まなかった】ボタン\n今日1杯も飲まなかった日に押してください。カレンダーに⭕がつきます。' },
-        { icon: '🌸', text: '7日間連続で飲まないと🌸マークがつきます。続けることで花になっていきます！' },
-        { icon: '📅', text: 'カレンダーの日付\n日付を押すとその日の詳細が見られます。記録した内容の確認や削除ができます。' },
-        { icon: '➕', text: '「記録を追加」ボタン\n同じ日に複数回記録したいときも追加できます。' },
+        { icon: '📱', text: 'この画面は「飲酒の記録をつける」ための画面です。\n毎日、飲んだかどうかをここに記録するだけでOKです。' },
+        { icon: '🍺', text: '【記録を追加】ボタン（日別画面で表示）\nお酒を飲んだら押してください。いくつかの質問に答えるだけで記録できます。①飲み始めた時刻→②どこで飲んだか→③誰と、どんな気分で→④何を飲んだか、の順に選ぶだけです。' },
+        { icon: '⭕', text: '【飲まなかった ⭕】緑のボタン\n「今日は1杯も飲まなかった！」という日に押してください。カレンダーに⭕マークがつきます。この⭕を増やしていくことが目標です。' },
+        { icon: '📅', text: 'カレンダーの見方\n上の「月間」タブを押すとカレンダーが表示されます。飲んだ日には❌、飲まなかった日には⭕がつきます。日付をタップするとその日の詳細が確認できます。' },
+        { icon: '🕐', text: '終了時刻の記録\n記録カードの「終了時刻を記録」を押すと、飲み終わった時刻も後から入力できます。' },
+        { icon: '🌸', text: '7日間連続で飲まない日が続くと、カレンダーに🌸マークがつきます。まず7日間続けることを目標にしてみてください！' },
+        { icon: '🗑️', text: '間違えて記録した場合\n「今日の記録」タブを開いて、記録カードの下にある「削除」を押すと消せます。' },
       ],
     },
     gambling: {
       title: 'ギャンブル記録の使い方',
       steps: [
-        { icon: '🎰', text: '【ギャンブルした】ボタン\nギャンブルをした日に押してください。場所・きっかけ・使った金額・負けた金額を記録できます。' },
-        { icon: '📍', text: '場所の入力\n前回入力した場所が最初から選択されています。違う場所の場合は新たに入力してください。入力した場所は次回からも選べます。' },
-        { icon: '💡', text: 'きっかけの選択\nリストの中から選ぶか、「その他」で自由に入力できます。入力したきっかけは次回からも選べます。' },
-        { icon: '💴', text: '金額の記録\n「使った金額」は持って行った金額、「負けた金額」は手元に戻らなかった金額を入力してください。' },
-        { icon: '⭕', text: '【しなかった】ボタン\nギャンブルをしなかった日に押してください。カレンダーに⭕がつきます。' },
-        { icon: '🌸', text: '7日間連続でしないと🌸マークがつきます。' },
-        { icon: '📊', text: '週間・月間の集計\n週と月の合計負け金額が自動で計算されて表示されます。' },
+        { icon: '📱', text: 'この画面は「ギャンブルの記録をつける」ための画面です。\nギャンブルをした日・しなかった日を毎日記録します。' },
+        { icon: '🎰', text: '【ギャンブルした】ボタン（日別画面で表示）\nギャンブルをした日に押してください。次の内容を入力する画面が出ます。\n①時刻（何時ごろ始めたか）\n②場所（パチンコ店・オンラインなど）\n③きっかけ（ストレス・暇だったなど）\n④使った金額（全部で何円使ったか）\n⑤負けた金額（手元に戻らなかった金額）\n\n全部入力しなくても大丈夫です。分かる範囲で入力して「記録する」を押してください。' },
+        { icon: '📍', text: '場所の選び方\nよく行く場所はリストから選べます。リストにない場所は「その他…」を押して自分で入力できます。入力した場所は次回から選べるようになります。\nまた、前回入力した場所が最初から選ばれています（変える必要がなければそのままでOK）。' },
+        { icon: '💡', text: 'きっかけの選び方\n「ストレス」「暇だった」などのリストから選んでください。当てはまるものがなければ「その他…」から自由に入力できます。' },
+        { icon: '💴', text: '金額の入力方法\n「使った金額」→ 今日ギャンブルに使ったお金の合計（例：10000と入力）\n「負けた金額」→ そのうち戻ってこなかった金額（例：8000と入力）\n数字だけ入力すればOKです（「円」は不要）。' },
+        { icon: '⭕', text: '【しなかった ⭕】緑のボタン\n「今日はギャンブルをしなかった！」という日に押してください。カレンダーに⭕マークがつきます。この⭕を増やしていくことが目標です。' },
+        { icon: '📊', text: '週間・月間の合計\n「今日の記録」画面と「月間」画面に、今週・今月の負け金額の合計が自動で表示されます。金額の推移を把握することが回復への第一歩です。' },
+        { icon: '🌸', text: '7日間連続でギャンブルをしない日が続くと、カレンダーに🌸マークがつきます。まず7日間続けることを目標にしてみてください！' },
       ],
     },
     other: {
       title: '行動記録の使い方',
       steps: [
-        { icon: '⭕', text: '【なかった】ボタン\n問題となる行動が1日なかった日に押してください。カレンダーに⭕がつきます。' },
-        { icon: '❌', text: '【あった】ボタン\n問題となる行動があった日は❌が記録されます。' },
-        { icon: '🌸', text: '7日間連続でなかった日が続くと🌸マークがつきます。' },
-        { icon: '📅', text: 'カレンダーの日付を押すとその日の詳細が見られます。' },
+        { icon: '📱', text: 'この画面は、問題となる行動があったかどうかを毎日記録するための画面です。' },
+        { icon: '⭕', text: '【なかった ⭕】緑のボタン\n「今日は問題となる行動がなかった」という日に押してください。カレンダーに⭕マークがつきます。この⭕を増やしていくことが目標です。' },
+        { icon: '❌', text: '問題となる行動があった日は、カレンダーに❌マークが表示されます。' },
+        { icon: '📅', text: 'カレンダーの見方\n上の「月間」タブを押すとカレンダーが表示されます。日付をタップするとその日の記録を確認・入力できます。' },
+        { icon: '🌸', text: '7日間連続で⭕が続くと、カレンダーに🌸マークがつきます。まず7日間続けることを目標にしてみてください！' },
       ],
     },
   }
@@ -686,7 +699,7 @@ export default function BehaviorPage() {
               <div className={styles.fabWrap} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button className={styles.fab} onClick={() => {
                   setGamblingForm({ time: todayStr() === viewDate ? nowTimeStr() : '', location: defaultGamblingLocation, trigger: '', amount_spent: '', amount_lost: '' })
-                  setGamblingOther({ location: '', trigger: '' }); setShowGamblingModal(true)
+                  setGamblingOther({ location: '', trigger: '' }); setGamblingError(''); setShowGamblingModal(true)
                 }} style={{ flex: 1 }}>
                   <span className={styles.fabPlus}>＋</span> ギャンブルした
                 </button>
@@ -862,6 +875,7 @@ export default function BehaviorPage() {
             <input className={styles.otherInput} type="number" placeholder="例: 10000" value={gamblingForm.amount_spent} onChange={e => setGamblingForm(f => ({ ...f, amount_spent: e.target.value }))} style={{ width: '100%' }} />
             <p className={styles.fieldLabel} style={{ marginTop: 12 }}>負けた金額</p>
             <input className={styles.otherInput} type="number" placeholder="例: 8000" value={gamblingForm.amount_lost} onChange={e => setGamblingForm(f => ({ ...f, amount_lost: e.target.value }))} style={{ width: '100%' }} />
+            {gamblingError && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 8, padding: '8px 12px', background: '#fef2f2', borderRadius: 8 }}>{gamblingError}</p>}
             <button className={styles.nextBtn} disabled={saving} onClick={handleSaveGamblingEntry}>{saving ? '保存中...' : '記録する'}</button>
           </div>
         </div>
