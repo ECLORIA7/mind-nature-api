@@ -5,6 +5,13 @@ import { useParams, useRouter } from 'next/navigation'
 import { apiFetch } from '@/lib/auth-client'
 import styles from './detail.module.css'
 
+const BEHAVIOR_TYPES = [
+  { value: 'alcohol', label: '飲酒' },
+  { value: 'smoking', label: '禁煙' },
+  { value: 'gambling', label: 'ギャンブル' },
+  { value: 'other', label: 'その他' },
+]
+
 type Patient = {
   age: string; sex: number; furigana: string; nickname: string; address: string; daily_rhythm: string; interests: string
   profession: string; work_history: string; personal_relations: string; harsh_childhood: string
@@ -15,7 +22,8 @@ type Symptom = {
   addiction_id: number; addictions?: { name: string }; severity: string; start_date: string
   frequency: string; difficulties: string; trouble: string; methods: string; goal: string; supplement: string
 }
-type Addiction = { addiction_id: number; addictions: { name: string } }
+type Addiction = { addiction_id: number; behavior_type: string; addictions: { name: string } }
+type AllAddiction = { id: number; name: string }
 type TestItem = { id: number; name: string; type: number; enabled: boolean; attempt_count: number; latest: { score: number; taken_at: string } | null }
 
 export default function PatientDetailPage() {
@@ -25,12 +33,37 @@ export default function PatientDetailPage() {
   const [patient, setPatient] = useState<Patient | null>(null)
   const [symptoms, setSymptoms] = useState<Symptom[]>([])
   const [addictions, setAddictions] = useState<Addiction[]>([])
+  const [allAddictions, setAllAddictions] = useState<AllAddiction[]>([])
   const [editing, setEditing] = useState(false)
   const [notes, setNotes] = useState({ counselor_supplement: '', counselor_findings: '', counselor_history: '' })
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [tests, setTests] = useState<TestItem[]>([])
   const [testsLoading, setTestsLoading] = useState(true)
+
+  // 依存症管理
+  const [showAddAddicForm, setShowAddAddicForm] = useState(false)
+  const [newAddicId, setNewAddicId] = useState('')
+  const [newBehaviorType, setNewBehaviorType] = useState('other')
+  const [editingAddicId, setEditingAddicId] = useState<number | null>(null)
+  const [editBehaviorType, setEditBehaviorType] = useState('other')
+
+  const loadDetail = () => {
+    apiFetch(`/counselor/patient?id=${id}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setFullName(d.profile?.full_name ?? '')
+        setPatient(d.patient)
+        setSymptoms(d.symptoms)
+        setAddictions(d.addictions)
+        setNotes({
+          counselor_supplement: d.patient?.counselor_supplement ?? '',
+          counselor_findings: d.patient?.counselor_findings ?? '',
+          counselor_history: d.patient?.counselor_history ?? '',
+        })
+      })
+      .finally(() => setLoading(false))
+  }
 
   const loadTests = () => {
     setTestsLoading(true)
@@ -48,21 +81,9 @@ export default function PatientDetailPage() {
   }
 
   useEffect(() => {
-    apiFetch(`/counselor/patient?id=${id}`)
-      .then((r) => r.json())
-      .then((d) => {
-        setFullName(d.profile?.full_name ?? '')
-        setPatient(d.patient)
-        setSymptoms(d.symptoms)
-        setAddictions(d.addictions)
-        setNotes({
-          counselor_supplement: d.patient?.counselor_supplement ?? '',
-          counselor_findings: d.patient?.counselor_findings ?? '',
-          counselor_history: d.patient?.counselor_history ?? '',
-        })
-      })
-      .finally(() => setLoading(false))
+    loadDetail()
     loadTests()
+    apiFetch('/addictions').then(r => r.json()).then(d => setAllAddictions(d.addictions ?? []))
   }, [id])
 
   const handleSave = async () => {
@@ -75,6 +96,37 @@ export default function PatientDetailPage() {
     setSaving(false)
   }
 
+  const handleAddAddiction = async () => {
+    if (!newAddicId) return
+    await apiFetch('/counselor/patient', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'add_addiction', patient_id: id, addiction_id: Number(newAddicId), behavior_type: newBehaviorType }),
+    })
+    setShowAddAddicForm(false)
+    setNewAddicId('')
+    setNewBehaviorType('other')
+    loadDetail()
+  }
+
+  const handleUpdateBehaviorType = async (addictionId: number) => {
+    await apiFetch('/counselor/patient', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'update_behavior_type', patient_id: id, addiction_id: addictionId, behavior_type: editBehaviorType }),
+    })
+    setEditingAddicId(null)
+    loadDetail()
+  }
+
+  const handleRemoveAddiction = async (addictionId: number) => {
+    if (!confirm('この症状カテゴリーを削除しますか？')) return
+    await apiFetch('/counselor/patient', {
+      method: 'POST',
+      body: JSON.stringify({ action: 'remove_addiction', patient_id: id, addiction_id: addictionId }),
+    })
+    loadDetail()
+  }
+
+  const behaviorLabel = (type: string) => BEHAVIOR_TYPES.find((t) => t.value === type)?.label ?? type
   const sexLabel = (s: number) => s === 1 ? '男性' : s === 2 ? '女性' : s === 3 ? 'その他' : '—'
 
   if (loading) return <p>読み込み中...</p>
@@ -106,6 +158,72 @@ export default function PatientDetailPage() {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* 症状カテゴリー管理 */}
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>症状カテゴリー</h2>
+          <button className={styles.editBtn} onClick={() => setShowAddAddicForm(true)}>+ 追加</button>
+        </div>
+
+        {showAddAddicForm && (
+          <div style={{ background: '#f8fafc', borderRadius: 10, padding: 16, marginBottom: 16 }}>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' }}>
+              <div>
+                <label style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 4 }}>症状</label>
+                <select value={newAddicId} onChange={(e) => setNewAddicId(e.target.value)}
+                  style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}>
+                  <option value="">選択してください</option>
+                  {allAddictions.map((a) => (
+                    <option key={a.id} value={a.id}>{a.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 4 }}>行動記録カテゴリー</label>
+                <select value={newBehaviorType} onChange={(e) => setNewBehaviorType(e.target.value)}
+                  style={{ padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}>
+                  {BEHAVIOR_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              <button onClick={handleAddAddiction} style={{ padding: '9px 18px', background: '#1e293b', color: '#fff', border: 'none', borderRadius: 6, fontSize: 14, cursor: 'pointer' }}>追加</button>
+              <button onClick={() => setShowAddAddicForm(false)} style={{ padding: '9px 14px', background: '#e2e8f0', color: '#374151', border: 'none', borderRadius: 6, fontSize: 14, cursor: 'pointer' }}>キャンセル</button>
+            </div>
+          </div>
+        )}
+
+        {addictions.length === 0 ? (
+          <p style={{ color: '#94a3b8', fontSize: 14 }}>症状カテゴリーが登録されていません</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {addictions.map((a) => (
+              <div key={a.addiction_id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', background: '#f8fafc', borderRadius: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 600, fontSize: 14, color: '#1e293b', flex: 1 }}>{a.addictions?.name}</span>
+                {editingAddicId === a.addiction_id ? (
+                  <>
+                    <select value={editBehaviorType} onChange={(e) => setEditBehaviorType(e.target.value)}
+                      style={{ padding: '6px 10px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 13 }}>
+                      {BEHAVIOR_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    </select>
+                    <button onClick={() => handleUpdateBehaviorType(a.addiction_id)}
+                      style={{ padding: '6px 14px', background: '#1e293b', color: '#fff', border: 'none', borderRadius: 6, fontSize: 13, cursor: 'pointer' }}>保存</button>
+                    <button onClick={() => setEditingAddicId(null)}
+                      style={{ padding: '6px 10px', background: '#e2e8f0', color: '#374151', border: 'none', borderRadius: 6, fontSize: 13, cursor: 'pointer' }}>×</button>
+                  </>
+                ) : (
+                  <>
+                    <span style={{ fontSize: 13, color: '#64748b', background: '#e2e8f0', padding: '3px 10px', borderRadius: 12 }}>{behaviorLabel(a.behavior_type ?? 'other')}</span>
+                    <button onClick={() => { setEditingAddicId(a.addiction_id); setEditBehaviorType(a.behavior_type ?? 'other') }}
+                      style={{ padding: '5px 12px', background: 'none', border: '1px solid #cbd5e1', borderRadius: 6, fontSize: 12, color: '#64748b', cursor: 'pointer' }}>変更</button>
+                    <button onClick={() => handleRemoveAddiction(a.addiction_id)}
+                      style={{ padding: '5px 10px', background: 'none', border: 'none', fontSize: 12, color: '#ef4444', cursor: 'pointer' }}>削除</button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {symptoms.length > 0 && (
@@ -169,7 +287,6 @@ export default function PatientDetailPage() {
         )}
       </div>
 
-      {/* テスト割り当て */}
       <div className={styles.section}>
         <h2 className={styles.sectionTitle}>テスト割り当て</h2>
         {testsLoading ? <p>読み込み中...</p> : (

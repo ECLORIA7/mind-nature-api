@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
 
   const { data: addictions } = await supabaseAdmin
     .from('patient_addictions')
-    .select('addiction_id, addictions(name)')
+    .select('addiction_id, behavior_type, addictions(name)')
     .eq('patient_id', patientId)
 
   return Response.json({ profile, patient, symptoms: symptoms ?? [], addictions: addictions ?? [] })
@@ -62,4 +62,42 @@ export async function PATCH(req: NextRequest) {
   }
 
   return Response.json({ message: '更新しました' })
+}
+
+export async function POST(req: NextRequest) {
+  const user = await getAuthUser(req)
+  const authError = requireCounselor(user)
+  if (authError) return authError
+
+  const body = await req.json().catch(() => ({}))
+  const { action, patient_id, addiction_id, behavior_type } = body
+  if (!patient_id) return Response.json({ error: 'patient_id は必須です' }, { status: 400 })
+
+  if (action === 'add_addiction') {
+    if (!addiction_id) return Response.json({ error: 'addiction_id は必須です' }, { status: 400 })
+    const { error } = await supabaseAdmin.from('patient_addictions').upsert(
+      { patient_id, addiction_id, behavior_type: behavior_type ?? 'other' },
+      { onConflict: 'patient_id,addiction_id' }
+    )
+    if (error) return Response.json({ error: error.message }, { status: 500 })
+    return Response.json({ message: '追加しました' })
+  }
+
+  if (action === 'update_behavior_type') {
+    if (!addiction_id || !behavior_type) return Response.json({ error: 'addiction_id と behavior_type は必須です' }, { status: 400 })
+    const { error } = await supabaseAdmin.from('patient_addictions')
+      .update({ behavior_type }).eq('patient_id', patient_id).eq('addiction_id', addiction_id)
+    if (error) return Response.json({ error: error.message }, { status: 500 })
+    return Response.json({ message: '更新しました' })
+  }
+
+  if (action === 'remove_addiction') {
+    if (!addiction_id) return Response.json({ error: 'addiction_id は必須です' }, { status: 400 })
+    const { error } = await supabaseAdmin.from('patient_addictions')
+      .delete().eq('patient_id', patient_id).eq('addiction_id', addiction_id)
+    if (error) return Response.json({ error: error.message }, { status: 500 })
+    return Response.json({ message: '削除しました' })
+  }
+
+  return Response.json({ error: '不正なアクション' }, { status: 400 })
 }

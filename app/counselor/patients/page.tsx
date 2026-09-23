@@ -5,7 +5,14 @@ import { useRouter } from 'next/navigation'
 import { apiFetch } from '@/lib/auth-client'
 import styles from './patients.module.css'
 
-type Addiction = { addiction_id: number; addictions: { name: string } }
+const BEHAVIOR_TYPES = [
+  { value: 'alcohol', label: '飲酒' },
+  { value: 'smoking', label: '禁煙' },
+  { value: 'gambling', label: 'ギャンブル' },
+  { value: 'other', label: 'その他' },
+]
+
+type Addiction = { addiction_id: number; behavior_type: string; addictions: { name: string } }
 type Patient = {
   id: string
   age: string | null
@@ -20,6 +27,7 @@ export default function PatientsPage() {
   const router = useRouter()
   const [patients, setPatients] = useState<Patient[]>([])
   const [loading, setLoading] = useState(true)
+  const [filterType, setFilterType] = useState<string>('')
   const [editTarget, setEditTarget] = useState<Patient | null>(null)
   const [editForm, setEditForm] = useState<EditForm>({ full_name: '', furigana: '', age: '', sex: '' })
   const [saving, setSaving] = useState(false)
@@ -59,27 +67,49 @@ export default function PatientsPage() {
         sex: editForm.sex ? Number(editForm.sex) : undefined,
       }),
     })
-    if (!res.ok) {
-      setEditError('保存に失敗しました')
-      setSaving(false)
-      return
-    }
+    if (!res.ok) { setEditError('保存に失敗しました'); setSaving(false); return }
     setEditTarget(null)
     setLoading(true)
     await fetchPatients()
     setSaving(false)
   }
 
+  const behaviorLabel = (type: string) => BEHAVIOR_TYPES.find((t) => t.value === type)?.label ?? type
+
+  const filteredPatients = filterType
+    ? patients.filter((p) => p.patient_addictions?.some((pa) => pa.behavior_type === filterType))
+    : patients
+
   if (loading) return <p>読み込み中...</p>
 
   return (
     <div>
       <h1 className={styles.heading}>患者一覧</h1>
-      {patients.length === 0 ? (
+
+      {/* カテゴリーフィルター */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+        <button
+          onClick={() => setFilterType('')}
+          style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid #e2e8f0', background: filterType === '' ? '#1e293b' : '#f8fafc', color: filterType === '' ? '#fff' : '#374151', fontSize: 13, cursor: 'pointer' }}
+        >
+          すべて
+        </button>
+        {BEHAVIOR_TYPES.map((t) => (
+          <button
+            key={t.value}
+            onClick={() => setFilterType(t.value)}
+            style={{ padding: '6px 14px', borderRadius: 20, border: '1px solid #e2e8f0', background: filterType === t.value ? '#1e293b' : '#f8fafc', color: filterType === t.value ? '#fff' : '#374151', fontSize: 13, cursor: 'pointer' }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {filteredPatients.length === 0 ? (
         <p className={styles.empty}>患者が登録されていません</p>
       ) : (
         <div className={styles.grid}>
-          {patients.map((p) => (
+          {filteredPatients.map((p) => (
             <div key={p.id} style={{ position: 'relative' }}>
               <div className={styles.card} onClick={() => router.push(`/preview/${p.id}`)} style={{ cursor: 'pointer' }}>
                 <h2 className={styles.name}>{p.profiles?.full_name}</h2>
@@ -87,7 +117,9 @@ export default function PatientsPage() {
                 <p className={styles.meta}>{p.age ? `${p.age}歳` : ''} {p.sex === 1 ? '男性' : p.sex === 2 ? '女性' : ''}</p>
                 <div className={styles.tags}>
                   {p.patient_addictions?.map((pa) => (
-                    <span key={pa.addiction_id} className={styles.tag}>{pa.addictions?.name}に関する悩み</span>
+                    <span key={pa.addiction_id} className={styles.tag}>
+                      {pa.addictions?.name}（{behaviorLabel(pa.behavior_type ?? 'other')}）
+                    </span>
                   ))}
                 </div>
               </div>
@@ -107,31 +139,21 @@ export default function PatientsPage() {
           <div style={{ background: 'white', borderRadius: 16, padding: 28, width: '100%', maxWidth: 420 }}>
             <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 20, color: '#1e293b' }}>患者情報の編集</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <label style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 4 }}>氏名</label>
-                <input
-                  value={editForm.full_name}
-                  onChange={(e) => setEditForm((f) => ({ ...f, full_name: e.target.value }))}
-                  style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 4 }}>ふりがな</label>
-                <input
-                  value={editForm.furigana}
-                  onChange={(e) => setEditForm((f) => ({ ...f, furigana: e.target.value }))}
-                  style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 4 }}>年齢</label>
-                <input
-                  value={editForm.age}
-                  onChange={(e) => setEditForm((f) => ({ ...f, age: e.target.value }))}
-                  style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }}
-                  placeholder="例: 35"
-                />
-              </div>
+              {[
+                { label: '氏名', key: 'full_name', placeholder: '' },
+                { label: 'ふりがな', key: 'furigana', placeholder: '' },
+                { label: '年齢', key: 'age', placeholder: '例: 35' },
+              ].map(({ label, key, placeholder }) => (
+                <div key={key}>
+                  <label style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 4 }}>{label}</label>
+                  <input
+                    value={editForm[key as keyof EditForm]}
+                    onChange={(e) => setEditForm((f) => ({ ...f, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px', fontSize: 14, boxSizing: 'border-box' }}
+                  />
+                </div>
+              ))}
               <div>
                 <label style={{ fontSize: 12, color: '#64748b', display: 'block', marginBottom: 4 }}>性別</label>
                 <select
@@ -148,17 +170,10 @@ export default function PatientsPage() {
             </div>
             {editError && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 8 }}>{editError}</p>}
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                style={{ flex: 1, background: '#1e40af', color: 'white', border: 'none', borderRadius: 10, padding: '12px', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
-              >
+              <button onClick={handleSave} disabled={saving} style={{ flex: 1, background: '#1e40af', color: 'white', border: 'none', borderRadius: 10, padding: '12px', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>
                 {saving ? '保存中...' : '保存'}
               </button>
-              <button
-                onClick={() => setEditTarget(null)}
-                style={{ flex: 1, background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: 10, padding: '12px', fontSize: 15, cursor: 'pointer' }}
-              >
+              <button onClick={() => setEditTarget(null)} style={{ flex: 1, background: '#f1f5f9', color: '#64748b', border: 'none', borderRadius: 10, padding: '12px', fontSize: 15, cursor: 'pointer' }}>
                 キャンセル
               </button>
             </div>

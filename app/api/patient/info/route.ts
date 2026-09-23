@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     .select(`
       id, age, sex,
       profiles ( full_name, hospital_id, hospitals ( name ) ),
-      patient_addictions ( addiction_id, addictions ( name, short_name ) ),
+      patient_addictions ( addiction_id, behavior_type, addictions ( name, short_name ) ),
       patient_counselors ( counselor_id, counselors ( profiles ( full_name ) ) )
     `)
     .eq('id', user!.id)
