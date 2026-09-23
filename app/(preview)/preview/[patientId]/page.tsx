@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { apiFetch } from '@/lib/auth-client'
 import styles from './preview.module.css'
 
@@ -26,7 +26,17 @@ const PATIENT_TABS: Tab[] = ['ToDo', '行動の記録', 'テスト', 'チャッ�
 export default function PreviewPage() {
   const { patientId } = useParams<{ patientId: string }>()
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<Tab>('ToDo')
+  const searchParams = useSearchParams()
+  const initialTab = (() => {
+    const t = searchParams.get('tab') as Tab
+    return ([...PATIENT_TABS, 'カウンセラー記録'] as Tab[]).includes(t) ? t : 'ToDo'
+  })()
+  const [activeTab, setActiveTab] = useState<Tab>(initialTab)
+
+  const changeTab = (tab: Tab) => {
+    setActiveTab(tab)
+    router.replace(`?tab=${encodeURIComponent(tab)}`, { scroll: false })
+  }
 
   // Core patient data (always loaded)
   const [fullName, setFullName] = useState('')
@@ -245,12 +255,12 @@ export default function PreviewPage() {
             <button
               key={t}
               className={activeTab === t ? styles.navLinkActive : styles.navLink}
-              onClick={() => setActiveTab(t)}
+              onClick={() => changeTab(t)}
             >{t}</button>
           ))}
           <button
             className={activeTab === 'カウンセラー記録' ? styles.navLinkCounselorActive : styles.navLinkCounselor}
-            onClick={() => setActiveTab('カウンセラー記録')}
+            onClick={() => changeTab('カウンセラー記録')}
           >カウンセラー記録</button>
         </div>
       </nav>
