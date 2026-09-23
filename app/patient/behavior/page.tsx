@@ -719,10 +719,21 @@ export default function BehaviorPage() {
                   <button className={styles.undoBtn} onClick={handleDeleteAbstained}>取り消す</button>
                 </div>
               )}
+              {dayRecord?.abstained === false && (
+                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '12px 16px', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 14, color: '#dc2626' }}>❌ この日は記録されています</span>
+                  <button className={styles.undoBtn} onClick={handleDeleteAbstained}>取り消す</button>
+                </div>
+              )}
               {!dayRecord && <p className={styles.noRecord}>まだ記録がありません</p>}
               <div className={styles.fabWrap} style={{ display: 'flex', gap: 10 }}>
-                <button className={styles.fab} onClick={() => { setShowModal(true); setModalStep(0) }} style={{ flex: 1 }}>
-                  <span className={styles.fabPlus}>＋</span> 記録を追加
+                <button className={styles.fab} onClick={async () => {
+                  if (saving) return
+                  setSaving(true)
+                  await apiFetch('/patient/behavior/daily', { method: 'POST', body: JSON.stringify({ addiction_id: selAddicId, date: viewDate, abstained: false }) })
+                  setSaving(false); loadCalendar(); loadDayData()
+                }} disabled={saving} style={{ flex: 1, background: '#ef4444' }}>
+                  {saving ? '保存中...' : 'あった ❌'}
                 </button>
                 <button className={`${styles.fab} ${styles.choiceBtnGood}`} onClick={handleSaveAbstained} disabled={saving} style={{ flex: 1 }}>
                   {saving ? '保存中...' : 'なかった ⭕'}
