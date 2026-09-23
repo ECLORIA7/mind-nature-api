@@ -10,6 +10,46 @@ type Grade = { max_score: number; grade_text: string }
 type Result = { id: string; attempt_number: number; answers: { question_id: number; selected_choice_ids: number[] }[]; score: number; taken_at: string }
 type Test = { id: number; name: string; type: number; description: string | null }
 
+const AUDIT_DRINKS = [
+  { label: 'ビール（5%）', items: [['コップ一杯', '0.8'], ['中瓶', '2.0'], ['大瓶', '2.5'], ['レギュラー缶', '1.4'], ['ロング缶', '2.0'], ['中ジョッキ', '1.3']] },
+  { label: '酎ハイ（7%）', items: [['レギュラー缶', '2.0'], ['ロング缶', '2.8'], ['中ジョッキ', '1.8']] },
+  { label: 'ワイン（12%）', items: [['ワイングラス', '1.2'], ['ハーフボトル', '3.6'], ['フルボトル', '7.2']] },
+  { label: '日本酒（15%）', items: [['1合', '2.2'], ['おちょこ', '0.4']] },
+  { label: 'ウィスキー（40%）', items: [['シングル水割り', '1.0'], ['ダブル水割り', '2.0'], ['ボトル1本', '23.0']] },
+  { label: '焼酎', items: [['20% 1合', '2.9'], ['25% 1合', '3.6']] },
+]
+
+function AuditDrinkTable() {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ background: '#fefce8', border: '1px solid #fde047', borderRadius: 12, padding: '12px 14px', marginBottom: 16 }}>
+      <button onClick={() => setOpen(o => !o)}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 0 }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: '#92400e' }}>📊 ドリンク単位の換算表（タップで開く）</span>
+        <span style={{ fontSize: 16, color: '#a16207' }}>{open ? '▲' : '▼'}</span>
+      </button>
+      {open && (
+        <div style={{ marginTop: 10 }}>
+          <p style={{ fontSize: 12, color: '#78350f', marginBottom: 8 }}>１ドリンク＝純アルコール量10g</p>
+          {AUDIT_DRINKS.map(cat => (
+            <div key={cat.label} style={{ marginBottom: 8 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#92400e', marginBottom: 2 }}>{cat.label}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2px 8px' }}>
+                {cat.items.map(([name, val]) => (
+                  <div key={name} style={{ fontSize: 12, color: '#78350f', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{name}</span><span style={{ fontWeight: 600 }}>{val}ドリンク</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function TestPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
@@ -122,6 +162,8 @@ export default function TestPage({ params }: { params: Promise<{ id: string }> }
             <div style={{ fontSize: 13, color: '#64748b' }}>{questionCount}問</div>
           </div>
 
+          {test.type === 0 && <AuditDrinkTable />}
+
           <button onClick={startTest}
             style={{ display: 'block', width: '100%', background: '#15803d', color: 'white', border: 'none',
               borderRadius: 14, padding: '16px', fontSize: 16, fontWeight: 600, cursor: 'pointer', marginBottom: 24 }}>
@@ -162,6 +204,7 @@ export default function TestPage({ params }: { params: Promise<{ id: string }> }
       {/* ===== 受験画面 ===== */}
       {view === 'take' && (
         <>
+          {test.type === 0 && <AuditDrinkTable />}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             {questions.map((q, qi) => {
               const isRadio = test.type === 0
