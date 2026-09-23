@@ -134,14 +134,22 @@ export default function PreviewPage() {
       .finally(() => setGroupsLoaded(true))
   }, [activeTab, patientId, groupsLoaded])
 
-  // Load tests list
+  // Load tests list (テストタブ or カウンセラー記録タブ)
   useEffect(() => {
-    if (activeTab !== 'テスト' || testsLoaded) return
+    if ((activeTab !== 'テスト' && activeTab !== 'カウンセラー記録') || testsLoaded) return
     apiFetch(`/counselor/patient/tests?patient_id=${patientId}`)
       .then((r) => r.json())
       .then((d) => setTests(d.tests ?? []))
       .finally(() => setTestsLoaded(true))
   }, [activeTab, patientId, testsLoaded])
+
+  const toggleTest = async (testId: number, enabled: boolean) => {
+    await apiFetch('/counselor/patient/tests', {
+      method: 'PUT',
+      body: JSON.stringify({ patient_id: patientId, test_id: testId, enabled }),
+    })
+    setTestsLoaded(false)
+  }
 
   // Load test detail
   useEffect(() => {
@@ -773,6 +781,37 @@ export default function PreviewPage() {
                 <div className={styles.actions}>
                   <button className={styles.saveBtn} onClick={saveNotes} disabled={saving}>{saving ? '保存中...' : '保存'}</button>
                   <button className={styles.cancelBtn} onClick={() => setEditing(false)}>キャンセル</button>
+                </div>
+              )}
+            </div>
+
+            {/* テスト割り当て */}
+            <div className={styles.section}>
+              <h2 className={styles.sectionTitle}>テスト割り当て</h2>
+              {!testsLoaded ? <p>読み込み中...</p> : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {tests.map(t => (
+                    <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 14, background: 'white',
+                      border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 16px' }}>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', marginBottom: 2 }}>{t.name}</div>
+                        <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                          {t.attempt_count === 0 ? '未受験' : `${t.attempt_count}回受験 · 最新: ${t.latest?.score}点`}
+                        </div>
+                      </div>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', flexShrink: 0 }}>
+                        <span style={{ fontSize: 13, color: t.enabled ? '#15803d' : '#94a3b8', fontWeight: 500 }}>
+                          {t.enabled ? '表示中' : '非表示'}
+                        </span>
+                        <div onClick={() => toggleTest(t.id, !t.enabled)}
+                          style={{ width: 44, height: 24, borderRadius: 12, background: t.enabled ? '#15803d' : '#cbd5e1',
+                            position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>
+                          <div style={{ position: 'absolute', top: 2, left: t.enabled ? 22 : 2, width: 20, height: 20,
+                            borderRadius: '50%', background: 'white', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,.2)' }} />
+                        </div>
+                      </label>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
