@@ -160,9 +160,10 @@ export default function PreviewPage() {
     apiFetch(`/patient/tests/${selectedTestId}?patient_id=${patientId}`)
       .then((r) => r.json())
       .then((d) => {
-        if (d.test) {
-          setTestDetail({ questions: d.questions ?? [], grades: d.grades ?? [], results: d.results ?? [] })
-        }
+        setTestDetail({ questions: d.questions ?? [], grades: d.grades ?? [], results: d.results ?? [] })
+      })
+      .catch(() => {
+        setTestDetail({ questions: [], grades: [], results: [] })
       })
       .finally(() => setTestDetailLoading(false))
   }, [selectedTestId, patientId])
@@ -429,48 +430,51 @@ export default function PreviewPage() {
                     style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#15803d' }}>‹</button>
                   <h1 className={styles.heading} style={{ margin: 0 }}>{test?.name}</h1>
                 </div>
-                {testDetailLoading || !testDetail ? <p>読み込み中...</p> : (
-                  <>
-                    {testDetail.results.length === 0 ? (
-                      <p style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: '16px 0 8px' }}>まだ受験していません</p>
-                    ) : (
-                      <>
-                        <h3 style={{ fontSize: 13, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>受験履歴</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-                          {[...testDetail.results].reverse().map(r => (
-                            <button key={r.id} onClick={() => setSelectedResult(r)}
-                              style={{ background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 12, padding: '12px 14px',
-                                textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <div>
-                                <div style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{r.attempt_number}回目</div>
-                                <div style={{ fontSize: 12, color: '#94a3b8' }}>
-                                  {new Date(r.taken_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                {testDetailLoading ? <p>読み込み中...</p> : (() => {
+                  const detail = testDetail ?? { questions: [], grades: [], results: [] }
+                  return (
+                    <>
+                      {detail.results.length === 0 ? (
+                        <p style={{ color: '#94a3b8', fontSize: 13, textAlign: 'center', padding: '16px 0 8px' }}>まだ受験していません</p>
+                      ) : (
+                        <>
+                          <h3 style={{ fontSize: 13, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>受験履歴</h3>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+                            {[...detail.results].reverse().map(r => (
+                              <button key={r.id} onClick={() => setSelectedResult(r)}
+                                style={{ background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 12, padding: '12px 14px',
+                                  textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                  <div style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{r.attempt_number}回目</div>
+                                  <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                                    {new Date(r.taken_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                  </div>
                                 </div>
-                              </div>
-                              <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: 16, fontWeight: 700, color: '#15803d' }}>
-                                  {test?.type === 0 ? `${r.score}点` : `${r.score}/${qCount}点`}
+                                <div style={{ textAlign: 'right' }}>
+                                  <div style={{ fontSize: 16, fontWeight: 700, color: '#15803d' }}>
+                                    {test?.type === 0 ? `${r.score}点` : `${r.score}/${qCount}点`}
+                                  </div>
+                                  {test?.type === 0 && (
+                                    <div style={{ fontSize: 11, color: '#64748b' }}>{getGrade(detail.grades, r.score)}</div>
+                                  )}
                                 </div>
-                                {test?.type === 0 && (
-                                  <div style={{ fontSize: 11, color: '#64748b' }}>{getGrade(testDetail.grades, r.score)}</div>
-                                )}
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                    <h3 style={{ fontSize: 13, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>テスト内容（{qCount}問）</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {testDetail.questions.map((q, qi) => (
-                        <div key={q.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px' }}>
-                          <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>{qi + 1}問目</div>
-                          <div style={{ fontSize: 13, color: '#1e293b' }}>{q.title}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                      <h3 style={{ fontSize: 13, fontWeight: 600, color: '#64748b', marginBottom: 8 }}>テスト内容（{qCount}問）</h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {detail.questions.map((q, qi) => (
+                          <div key={q.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 12px' }}>
+                            <div style={{ fontSize: 11, color: '#94a3b8', marginBottom: 4 }}>{qi + 1}問目</div>
+                            <div style={{ fontSize: 13, color: '#1e293b' }}>{q.title}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )
+                })()}
               </div>
             )
           }
