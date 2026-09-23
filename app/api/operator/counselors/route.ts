@@ -95,6 +95,22 @@ export async function POST(req: NextRequest) {
   return Response.json({ message: 'カウンセラーアカウントを作成しました', temporary_password: password }, { status: 201 })
 }
 
+export async function DELETE(req: NextRequest) {
+  const user = await getAuthUser(req)
+  const authError = requireOperator(user)
+  if (authError) return authError
+
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get('id')
+  if (!id) return Response.json({ error: 'id は必須です' }, { status: 400 })
+
+  await supabaseAdmin.from('counselors').delete().eq('id', id)
+  await supabaseAdmin.from('profiles').delete().eq('id', id)
+  await supabaseAdmin.auth.admin.deleteUser(id)
+
+  return Response.json({ message: '削除しました' })
+}
+
 export async function PATCH(req: NextRequest) {
   const user = await getAuthUser(req)
   const authError = requireOperator(user)

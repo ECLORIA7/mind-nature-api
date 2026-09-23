@@ -57,6 +57,12 @@ export default function CounselorsPage() {
     setSaving(false)
   }
 
+  const deleteCounselor = async (id: string, name: string) => {
+    if (!confirm(`${name} を削除しますか？この操作は取り消せません。`)) return
+    await apiFetch(`/operator/counselors?id=${id}`, { method: 'DELETE' })
+    await fetchData()
+  }
+
   const setRank = async (id: string, rank: number) => {
     await apiFetch('/operator/counselors', { method: 'PATCH', body: JSON.stringify({ id, rank }) })
     await fetchData()
@@ -123,6 +129,12 @@ export default function CounselorsPage() {
               <option value={0}>管理者</option>
             </select>
             <span style={{ fontSize: 13, color: '#64748b' }}>{formatDate(c.created_at)}</span>
+            <button
+              onClick={() => deleteCounselor(c.id, c.profiles?.full_name)}
+              style={{ background: 'none', border: '1px solid #fca5a5', borderRadius: 6, padding: '4px 10px', fontSize: 12, color: '#ef4444', cursor: 'pointer' }}
+            >
+              削除
+            </button>
           </div>
         ))}
       </div>

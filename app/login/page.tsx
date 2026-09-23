@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { saveSession } from '@/lib/auth-client'
 import styles from './login.module.css'
 
@@ -72,6 +73,11 @@ export default function LoginPage() {
           <button className={styles.button} type="submit" disabled={loading}>
             {loading ? 'ログイン中...' : 'ログイン'}
           </button>
+          <div style={{ textAlign: 'center' }}>
+            <Link href="/forgot-password" style={{ fontSize: 14, color: '#64748b', textDecoration: 'none' }}>
+              パスワードをお忘れですか？
+            </Link>
+          </div>
         </form>
       </div>
     </div>

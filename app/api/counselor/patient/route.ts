@@ -42,15 +42,24 @@ export async function PATCH(req: NextRequest) {
   if (authError) return authError
 
   const body = await req.json().catch(() => ({}))
-  const { patient_id, counselor_supplement, counselor_findings, counselor_history } = body
+  const { patient_id, counselor_supplement, counselor_findings, counselor_history, full_name, furigana, age, sex } = body
 
   if (!patient_id) return Response.json({ error: 'patient_id は必須です' }, { status: 400 })
 
-  await supabaseAdmin.from('patients').update({
-    ...(counselor_supplement !== undefined && { counselor_supplement }),
-    ...(counselor_findings !== undefined && { counselor_findings }),
-    ...(counselor_history !== undefined && { counselor_history }),
-  }).eq('id', patient_id)
+  const patientUpdate: Record<string, unknown> = {}
+  if (counselor_supplement !== undefined) patientUpdate.counselor_supplement = counselor_supplement
+  if (counselor_findings !== undefined) patientUpdate.counselor_findings = counselor_findings
+  if (counselor_history !== undefined) patientUpdate.counselor_history = counselor_history
+  if (furigana !== undefined) patientUpdate.furigana = furigana
+  if (age !== undefined) patientUpdate.age = age
+  if (sex !== undefined) patientUpdate.sex = sex
+
+  if (Object.keys(patientUpdate).length > 0) {
+    await supabaseAdmin.from('patients').update(patientUpdate).eq('id', patient_id)
+  }
+  if (full_name !== undefined) {
+    await supabaseAdmin.from('profiles').update({ full_name }).eq('id', patient_id)
+  }
 
   return Response.json({ message: '更新しました' })
 }
