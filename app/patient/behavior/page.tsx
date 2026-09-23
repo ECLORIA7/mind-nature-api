@@ -376,6 +376,54 @@ export default function BehaviorPage() {
   const didLabel = isSmoking ? '吸った ❌' : isGambling ? 'した ❌' : '飲んだ ❌'
   const streakUnit = isSmoking ? '本' : ''
 
+  const GUIDES: Record<string, { title: string; steps: { icon: string; text: string }[] }> = {
+    smoking: {
+      title: '禁煙記録の使い方',
+      steps: [
+        { icon: '🚬', text: '【吸いました（今）】ボタン\nタバコを吸ったら、すぐにこのボタンを押してください。今の時刻が自動で記録されます。' },
+        { icon: '🕐', text: '【後から記録】ボタン\n押し忘れた場合や、前の時間の記録をつけたいときに使います。吸った時刻を選んで記録できます。' },
+        { icon: '📍', text: '場所・きっかけの記録\n記録した後で「場所・きっかけを追記」を押すと、どこで・何がきっかけで吸ったかを記入できます。次回からの対策に役立ちます。' },
+        { icon: '⭕', text: '【吸わなかった】ボタン\n1日1本も吸わなかった日に押してください。カレンダーに⭕がつきます。' },
+        { icon: '🌸', text: '7日間連続で吸わないと🌸マークがつきます。続けることで花になっていきます！' },
+        { icon: '📅', text: 'カレンダーの数字\n毎日の喫煙本数がカレンダーに表示されます。日付を押すとその日の詳細が見られます。' },
+      ],
+    },
+    alcohol: {
+      title: '飲酒記録の使い方',
+      steps: [
+        { icon: '🍺', text: '【飲んだ】ボタン\n今日お酒を飲んだら押してください。飲み始めた時刻・場所・一緒にいた人・気分・お酒の種類を記録できます。' },
+        { icon: '⭕', text: '【飲まなかった】ボタン\n今日1杯も飲まなかった日に押してください。カレンダーに⭕がつきます。' },
+        { icon: '🌸', text: '7日間連続で飲まないと🌸マークがつきます。続けることで花になっていきます！' },
+        { icon: '📅', text: 'カレンダーの日付\n日付を押すとその日の詳細が見られます。記録した内容の確認や削除ができます。' },
+        { icon: '➕', text: '「記録を追加」ボタン\n同じ日に複数回記録したいときも追加できます。' },
+      ],
+    },
+    gambling: {
+      title: 'ギャンブル記録の使い方',
+      steps: [
+        { icon: '🎰', text: '【ギャンブルした】ボタン\nギャンブルをした日に押してください。場所・きっかけ・使った金額・負けた金額を記録できます。' },
+        { icon: '📍', text: '場所の入力\n前回入力した場所が最初から選択されています。違う場所の場合は新たに入力してください。入力した場所は次回からも選べます。' },
+        { icon: '💡', text: 'きっかけの選択\nリストの中から選ぶか、「その他」で自由に入力できます。入力したきっかけは次回からも選べます。' },
+        { icon: '💴', text: '金額の記録\n「使った金額」は持って行った金額、「負けた金額」は手元に戻らなかった金額を入力してください。' },
+        { icon: '⭕', text: '【しなかった】ボタン\nギャンブルをしなかった日に押してください。カレンダーに⭕がつきます。' },
+        { icon: '🌸', text: '7日間連続でしないと🌸マークがつきます。' },
+        { icon: '📊', text: '週間・月間の集計\n週と月の合計負け金額が自動で計算されて表示されます。' },
+      ],
+    },
+    other: {
+      title: '行動記録の使い方',
+      steps: [
+        { icon: '⭕', text: '【なかった】ボタン\n問題となる行動が1日なかった日に押してください。カレンダーに⭕がつきます。' },
+        { icon: '❌', text: '【あった】ボタン\n問題となる行動があった日は❌が記録されます。' },
+        { icon: '🌸', text: '7日間連続でなかった日が続くと🌸マークがつきます。' },
+        { icon: '📅', text: 'カレンダーの日付を押すとその日の詳細が見られます。' },
+      ],
+    },
+  }
+
+  const currentGuide = GUIDES[behaviorType] ?? GUIDES.other
+  const [showGuide, setShowGuide] = useState(false)
+
   if (addicsLoading) return <div className={styles.empty}><p>読み込み中...</p></div>
   if (addictions.length === 0) return (
     <div className={styles.empty}>
@@ -387,6 +435,14 @@ export default function BehaviorPage() {
   return (
     <div className={styles.page}>
       <canvas ref={canvasRef} className={styles.confettiCanvas} style={{ display: 'none' }} />
+
+      {/* 使い方ボタン */}
+      <button
+        onClick={() => setShowGuide(true)}
+        style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12, background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 20, padding: '6px 16px', fontSize: 13, color: '#1e40af', cursor: 'pointer', fontWeight: 500 }}
+      >
+        ❓ 使い方を見る
+      </button>
 
       {/* カテゴリータブ */}
       <div className={styles.addicTabs}>
@@ -411,6 +467,7 @@ export default function BehaviorPage() {
         <button className={viewMode === 'month' ? styles.toggleActive : styles.toggleBtn} onClick={() => setViewMode('month')}>月間</button>
         <button className={viewMode === 'day' ? styles.toggleActive : styles.toggleBtn} onClick={() => setViewMode('day')}>今日の記録</button>
       </div>
+
 
       {/* ======= 月間ビュー ======= */}
       {viewMode === 'month' && (
@@ -821,6 +878,31 @@ export default function BehaviorPage() {
             <p className={styles.fieldLabel}>何時に終わりましたか？</p>
             <TimeSelect value={endTimeInput} onChange={v => setEndTimeInput(v)} />
             <button className={styles.nextBtn} disabled={!endTimeInput} onClick={handleSaveEndTime}>保存</button>
+          </div>
+        </div>
+      )}
+
+      {/* 使い方モーダル */}
+      {showGuide && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 200, padding: '0' }}
+          onClick={e => { if (e.target === e.currentTarget) setShowGuide(false) }}>
+          <div style={{ background: 'white', borderRadius: '20px 20px 0 0', padding: 24, width: '100%', maxWidth: 520, maxHeight: '85vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: '#1e293b', margin: 0 }}>{currentGuide.title}</h2>
+              <button onClick={() => setShowGuide(false)} style={{ background: '#f1f5f9', border: 'none', borderRadius: '50%', width: 32, height: 32, fontSize: 18, cursor: 'pointer', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {currentGuide.steps.map((step, i) => (
+                <div key={i} style={{ display: 'flex', gap: 14, alignItems: 'flex-start', background: '#f8fafc', borderRadius: 12, padding: '14px 16px' }}>
+                  <span style={{ fontSize: 28, lineHeight: 1, flexShrink: 0 }}>{step.icon}</span>
+                  <p style={{ margin: 0, fontSize: 14, lineHeight: 1.7, color: '#374151', whiteSpace: 'pre-wrap' }}>{step.text}</p>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setShowGuide(false)}
+              style={{ width: '100%', marginTop: 20, background: '#1e293b', color: 'white', border: 'none', borderRadius: 12, padding: '14px', fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>
+              閉じる
+            </button>
           </div>
         </div>
       )}
