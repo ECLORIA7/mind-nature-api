@@ -56,11 +56,13 @@ async function registerPatient(body: Record<string, unknown>, hospitalId: number
 
   await supabaseAdmin.from('patients').insert({ id: userId, age: null, sex: 0, profile_completed: false })
 
-  // カテゴリー登録（カウンセラーが事前設定）
-  const addictions = body.addictions as { addiction_id: number; behavior_type: string }[] | undefined
+  // カテゴリー登録（behavior_typeはaddictionsテーブルから自動取得）
+  const addictions = body.addictions as { addiction_id: number }[] | undefined
   if (Array.isArray(addictions) && addictions.length > 0) {
+    const { data: adicData } = await supabaseAdmin.from('addictions').select('id, behavior_type').in('id', addictions.map(a => a.addiction_id))
+    const adicMap = new Map((adicData ?? []).map(a => [a.id, a.behavior_type]))
     await supabaseAdmin.from('patient_addictions').insert(
-      addictions.map((a) => ({ patient_id: userId, addiction_id: a.addiction_id, behavior_type: a.behavior_type }))
+      addictions.map((a) => ({ patient_id: userId, addiction_id: a.addiction_id, behavior_type: adicMap.get(a.addiction_id) ?? 'other' }))
     )
   }
 

@@ -75,20 +75,14 @@ export async function POST(req: NextRequest) {
 
   if (action === 'add_addiction') {
     if (!addiction_id) return Response.json({ error: 'addiction_id は必須です' }, { status: 400 })
+    // behavior_typeはaddictionsテーブルから自動取得
+    const { data: addic } = await supabaseAdmin.from('addictions').select('behavior_type').eq('id', addiction_id).single()
     const { error } = await supabaseAdmin.from('patient_addictions').upsert(
-      { patient_id, addiction_id, behavior_type: behavior_type ?? 'other' },
+      { patient_id, addiction_id, behavior_type: addic?.behavior_type ?? 'other' },
       { onConflict: 'patient_id,addiction_id' }
     )
     if (error) return Response.json({ error: error.message }, { status: 500 })
     return Response.json({ message: '追加しました' })
-  }
-
-  if (action === 'update_behavior_type') {
-    if (!addiction_id || !behavior_type) return Response.json({ error: 'addiction_id と behavior_type は必須です' }, { status: 400 })
-    const { error } = await supabaseAdmin.from('patient_addictions')
-      .update({ behavior_type }).eq('patient_id', patient_id).eq('addiction_id', addiction_id)
-    if (error) return Response.json({ error: error.message }, { status: 500 })
-    return Response.json({ message: '更新しました' })
   }
 
   if (action === 'remove_addiction') {

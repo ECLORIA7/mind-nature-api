@@ -7,14 +7,7 @@ import styles from './register.module.css'
 type Group = { id: number; name: string; organization_id: number | null }
 type Addiction = { id: number; name: string }
 
-const BEHAVIOR_TYPES = [
-  { value: 'alcohol', label: '飲酒' },
-  { value: 'smoking', label: '禁煙' },
-  { value: 'gambling', label: 'ギャンブル' },
-  { value: 'other', label: 'その他' },
-]
-
-type SelectedAddiction = { addiction_id: number; behavior_type: string; name: string }
+type SelectedAddiction = { addiction_id: number; name: string }
 
 export default function RegisterClientPage() {
   const [email, setEmail] = useState('')
@@ -23,7 +16,6 @@ export default function RegisterClientPage() {
   const [allAddictions, setAllAddictions] = useState<Addiction[]>([])
   const [selectedAddictions, setSelectedAddictions] = useState<SelectedAddiction[]>([])
   const [addingId, setAddingId] = useState('')
-  const [addingBehavior, setAddingBehavior] = useState('alcohol')
   const [error, setError] = useState('')
   const [result, setResult] = useState<{ email: string; password: string; groupName?: string } | null>(null)
   const [saving, setSaving] = useState(false)
@@ -42,16 +34,13 @@ export default function RegisterClientPage() {
     const addiction = allAddictions.find((a) => String(a.id) === addingId)
     if (!addiction) return
     if (selectedAddictions.some((s) => s.addiction_id === addiction.id)) return
-    setSelectedAddictions((prev) => [...prev, { addiction_id: addiction.id, behavior_type: addingBehavior, name: addiction.name }])
+    setSelectedAddictions((prev) => [...prev, { addiction_id: addiction.id, name: addiction.name }])
     setAddingId('')
-    setAddingBehavior('alcohol')
   }
 
   const removeCategory = (id: number) => {
     setSelectedAddictions((prev) => prev.filter((s) => s.addiction_id !== id))
   }
-
-  const behaviorLabel = (v: string) => BEHAVIOR_TYPES.find((t) => t.value === v)?.label ?? v
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -65,7 +54,7 @@ export default function RegisterClientPage() {
         body: JSON.stringify({
           type: 'patient',
           email: email.trim(),
-          addictions: selectedAddictions.map((s) => ({ addiction_id: s.addiction_id, behavior_type: s.behavior_type })),
+          addictions: selectedAddictions.map((s) => ({ addiction_id: s.addiction_id })),
         }),
       })
       const data = await res.json()
@@ -125,13 +114,6 @@ export default function RegisterClientPage() {
                 .map((a) => <option key={a.id} value={a.id}>{a.name}</option>)
               }
             </select>
-            <select
-              value={addingBehavior}
-              onChange={(e) => setAddingBehavior(e.target.value)}
-              style={{ padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: 6, fontSize: 14 }}
-            >
-              {BEHAVIOR_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
-            </select>
             <button
               type="button"
               onClick={addCategory}
@@ -146,7 +128,6 @@ export default function RegisterClientPage() {
               {selectedAddictions.map((s) => (
                 <div key={s.addiction_id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f0fdf4', borderRadius: 8, padding: '8px 12px' }}>
                   <span style={{ flex: 1, fontSize: 14, color: '#15803d', fontWeight: 500 }}>{s.name}</span>
-                  <span style={{ fontSize: 13, color: '#64748b', background: '#e2e8f0', padding: '2px 10px', borderRadius: 10 }}>{behaviorLabel(s.behavior_type)}</span>
                   <button type="button" onClick={() => removeCategory(s.addiction_id)}
                     style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 16, cursor: 'pointer', padding: '0 4px' }}>×</button>
                 </div>
