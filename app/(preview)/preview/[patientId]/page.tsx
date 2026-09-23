@@ -456,25 +456,33 @@ export default function PreviewPage() {
             )
           }
 
-          // テスト一覧
+          // テスト一覧（カウンセラービューは全テスト表示）
           return (
             <div>
-              <h1 className={styles.heading}>テスト</h1>
-              {!testsLoaded ? <p>読み込み中...</p> : tests.filter(t => t.enabled).length === 0 ? (
-                <p style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', padding: '48px 0' }}>割り当てられたテストはありません</p>
+              <h1 className={styles.heading}>テスト結果</h1>
+              <p style={{ fontSize: 12, color: '#94a3b8', marginBottom: 12 }}>カウンセラービュー：全テストの結果を確認できます</p>
+              {!testsLoaded ? <p>読み込み中...</p> : tests.length === 0 ? (
+                <p style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', padding: '48px 0' }}>テストがありません</p>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {tests.filter(t => t.enabled).map(t => (
+                  {tests.map(t => (
                     <button key={t.id} onClick={() => setSelectedTestId(t.id)}
-                      style={{ background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '14px 16px',
+                      style={{ background: 'white', border: `1.5px solid ${t.attempt_count > 0 ? '#86efac' : '#e2e8f0'}`, borderRadius: 14, padding: '14px 16px',
                         textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
                       <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#dcfce7',
                         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
                         {t.type === 0 ? '📋' : '✏️'}
                       </div>
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', marginBottom: 2 }}>{t.name}</div>
-                        <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                          <span style={{ fontSize: 14, fontWeight: 600, color: '#1e293b' }}>{t.name}</span>
+                          <span style={{ fontSize: 10, padding: '2px 6px', borderRadius: 10,
+                            background: t.enabled ? '#dcfce7' : '#f1f5f9',
+                            color: t.enabled ? '#15803d' : '#94a3b8' }}>
+                            {t.enabled ? '表示中' : '非表示'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 12, color: t.attempt_count > 0 ? '#15803d' : '#94a3b8' }}>
                           {t.attempt_count === 0 ? '未受験' : `${t.attempt_count}回受験 · 最新: ${t.latest?.score}点`}
                         </div>
                       </div>
