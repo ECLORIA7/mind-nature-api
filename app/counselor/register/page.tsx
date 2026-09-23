@@ -5,12 +5,10 @@ import { apiFetch } from '@/lib/auth-client'
 import styles from './register.module.css'
 
 type Group = { id: number; name: string; organization_id: number | null }
-type Org = { id: number; name: string }
 
 export default function RegisterClientPage() {
   const [email, setEmail] = useState('')
   const [groupId, setGroupId] = useState('')
-  const [orgs, setOrgs] = useState<Org[]>([])
   const [groups, setGroups] = useState<Group[]>([])
   const [error, setError] = useState('')
   const [result, setResult] = useState<{ email: string; password: string; groupName?: string } | null>(null)
@@ -19,7 +17,7 @@ export default function RegisterClientPage() {
   useEffect(() => {
     apiFetch('/counselor/organizations')
       .then((r) => r.json())
-      .then((d) => { setOrgs(d.organizations ?? []); setGroups(d.groups ?? []) })
+      .then((d) => { setGroups(d.groups ?? []) })
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,9 +54,6 @@ export default function RegisterClientPage() {
     }
   }
 
-  const groupsByOrg = (orgId: number) => groups.filter((g) => g.organization_id === orgId)
-  const ungroupedGroups = groups.filter((g) => !g.organization_id)
-
   return (
     <div>
       <h1 className={styles.heading}>クライアント登録</h1>
@@ -82,20 +77,7 @@ export default function RegisterClientPage() {
           <label className={styles.label}>グループに追加（任意）</label>
           <select className={styles.input} value={groupId} onChange={(e) => setGroupId(e.target.value)}>
             <option value="">グループを選択しない</option>
-            {orgs.map((org) => {
-              const orgGroups = groupsByOrg(org.id)
-              if (orgGroups.length === 0) return null
-              return (
-                <optgroup key={org.id} label={org.name}>
-                  {orgGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-                </optgroup>
-              )
-            })}
-            {ungroupedGroups.length > 0 && (
-              <optgroup label="組織なし">
-                {ungroupedGroups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
-              </optgroup>
-            )}
+            {groups.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
           </select>
 
           {error && <p className={styles.error}>{error}</p>}
