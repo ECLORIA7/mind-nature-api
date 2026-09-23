@@ -102,7 +102,7 @@ export default function BehaviorPage() {
   const [weekSummary, setWeekSummary] = useState({ lost: 0, spent: 0 })
   const [monthSummary, setMonthSummary] = useState({ lost: 0, spent: 0 })
   const [showGamblingModal, setShowGamblingModal] = useState(false)
-  const [gamblingForm, setGamblingForm] = useState({ time: '', location: '', trigger: '', amount_spent: '', amount_lost: '' })
+  const [gamblingForm, setGamblingForm] = useState({ time: '', location: '', trigger: '', amount: '', result: 'lost' as 'lost' | 'won' })
   const [gamblingOther, setGamblingOther] = useState({ location: '', trigger: '' })
   const [gamblingError, setGamblingError] = useState('')
 
@@ -313,14 +313,16 @@ export default function BehaviorPage() {
     const trig = gamblingForm.trigger === '__other__' ? gamblingOther.trigger : gamblingForm.trigger
     if (gamblingOther.location && gamblingForm.location === '__other__') await saveCustomOption('location', gamblingOther.location)
     if (gamblingOther.trigger && gamblingForm.trigger === '__other__') await saveCustomOption('mood', gamblingOther.trigger)
+    const absAmount = Number(gamblingForm.amount) || 0
+    const netAmount = gamblingForm.result === 'won' ? -absAmount : absAmount
     const res = await apiFetch('/patient/behavior/gambling/entries', {
       method: 'POST',
       body: JSON.stringify({
         addiction_id: selAddicId, date: viewDate,
         session_time: gamblingForm.time ? gamblingForm.time + ':00' : null,
         location: loc || null, trigger: trig || null,
-        amount_spent: Number(gamblingForm.amount_spent) || 0,
-        amount_lost: Number(gamblingForm.amount_lost) || 0,
+        amount_spent: 0,
+        amount_lost: netAmount,
       })
     })
     if (!res.ok) {
@@ -329,7 +331,7 @@ export default function BehaviorPage() {
       setSaving(false)
       return
     }
-    setShowGamblingModal(false); setGamblingForm({ time: '', location: '', trigger: '', amount_spent: '', amount_lost: '' }); setGamblingOther({ location: '', trigger: '' }); setGamblingError('')
+    setShowGamblingModal(false); setGamblingForm({ time: '', location: '', trigger: '', amount: '', result: 'lost' }); setGamblingOther({ location: '', trigger: '' }); setGamblingError('')
     setSaving(false); loadCalendar(); if (viewMode === 'day') loadDayData()
   }
 
@@ -522,13 +524,17 @@ export default function BehaviorPage() {
 
           {isGambling && (
             <div style={{ display: 'flex', gap: 12, margin: '16px 0', flexWrap: 'wrap' }}>
-              <div style={{ background: '#fef2f2', borderRadius: 10, padding: '12px 16px', flex: 1, minWidth: 140 }}>
-                <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 4px' }}>今週の負け</p>
-                <p style={{ fontSize: 22, fontWeight: 700, color: '#ef4444', margin: 0 }}>{weekSummary.lost.toLocaleString()}円</p>
+              <div style={{ background: weekSummary.lost >= 0 ? '#fef2f2' : '#f0fdf4', borderRadius: 10, padding: '12px 16px', flex: 1, minWidth: 140 }}>
+                <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 4px' }}>今週の精算</p>
+                <p style={{ fontSize: 22, fontWeight: 700, color: weekSummary.lost >= 0 ? '#ef4444' : '#15803d', margin: 0 }}>
+                  {weekSummary.lost >= 0 ? `−${weekSummary.lost.toLocaleString()}円` : `+${(-weekSummary.lost).toLocaleString()}円`}
+                </p>
               </div>
-              <div style={{ background: '#fef2f2', borderRadius: 10, padding: '12px 16px', flex: 1, minWidth: 140 }}>
-                <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 4px' }}>今月の負け</p>
-                <p style={{ fontSize: 22, fontWeight: 700, color: '#ef4444', margin: 0 }}>{monthSummary.lost.toLocaleString()}円</p>
+              <div style={{ background: monthSummary.lost >= 0 ? '#fef2f2' : '#f0fdf4', borderRadius: 10, padding: '12px 16px', flex: 1, minWidth: 140 }}>
+                <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 4px' }}>今月の精算</p>
+                <p style={{ fontSize: 22, fontWeight: 700, color: monthSummary.lost >= 0 ? '#ef4444' : '#15803d', margin: 0 }}>
+                  {monthSummary.lost >= 0 ? `−${monthSummary.lost.toLocaleString()}円` : `+${(-monthSummary.lost).toLocaleString()}円`}
+                </p>
               </div>
             </div>
           )}
@@ -676,20 +682,28 @@ export default function BehaviorPage() {
                         {entry.location && <span className={styles.chip}>{entry.location}</span>}
                         {entry.trigger && <span className={styles.chip}>{entry.trigger}</span>}
                       </div>
-                      <div style={{ display: 'flex', gap: 16, marginTop: 6, fontSize: 13 }}>
-                        <span>使用: <strong>{entry.amount_spent.toLocaleString()}円</strong></span>
-                        <span style={{ color: '#ef4444' }}>負け: <strong>{entry.amount_lost.toLocaleString()}円</strong></span>
-                      </div>
+                      {entry.amount_lost !== 0 && (
+                        <div style={{ marginTop: 6, fontSize: 14, fontWeight: 700 }}>
+                          {entry.amount_lost > 0
+                            ? <span style={{ color: '#ef4444' }}>負け: {entry.amount_lost.toLocaleString()}円 ❌</span>
+                            : <span style={{ color: '#15803d' }}>勝ち: {(-entry.amount_lost).toLocaleString()}円 ✓</span>
+                          }
+                        </div>
+                      )}
                     </div>
                   ))}
                   <div style={{ display: 'flex', gap: 12, margin: '12px 0', flexWrap: 'wrap' }}>
-                    <div style={{ background: '#fef2f2', borderRadius: 8, padding: '10px 14px', flex: 1, minWidth: 120 }}>
-                      <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>今週の負け</p>
-                      <p style={{ fontSize: 18, fontWeight: 700, color: '#ef4444', margin: 0 }}>{weekSummary.lost.toLocaleString()}円</p>
+                    <div style={{ background: weekSummary.lost >= 0 ? '#fef2f2' : '#f0fdf4', borderRadius: 8, padding: '10px 14px', flex: 1, minWidth: 120 }}>
+                      <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>今週の精算</p>
+                      <p style={{ fontSize: 18, fontWeight: 700, color: weekSummary.lost >= 0 ? '#ef4444' : '#15803d', margin: 0 }}>
+                        {weekSummary.lost >= 0 ? `−${weekSummary.lost.toLocaleString()}円` : `+${(-weekSummary.lost).toLocaleString()}円`}
+                      </p>
                     </div>
-                    <div style={{ background: '#fef2f2', borderRadius: 8, padding: '10px 14px', flex: 1, minWidth: 120 }}>
-                      <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>今月の負け</p>
-                      <p style={{ fontSize: 18, fontWeight: 700, color: '#ef4444', margin: 0 }}>{monthSummary.lost.toLocaleString()}円</p>
+                    <div style={{ background: monthSummary.lost >= 0 ? '#fef2f2' : '#f0fdf4', borderRadius: 8, padding: '10px 14px', flex: 1, minWidth: 120 }}>
+                      <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>今月の精算</p>
+                      <p style={{ fontSize: 18, fontWeight: 700, color: monthSummary.lost >= 0 ? '#ef4444' : '#15803d', margin: 0 }}>
+                        {monthSummary.lost >= 0 ? `−${monthSummary.lost.toLocaleString()}円` : `+${(-monthSummary.lost).toLocaleString()}円`}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -698,7 +712,7 @@ export default function BehaviorPage() {
               )}
               <div className={styles.fabWrap} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button className={styles.fab} onClick={() => {
-                  setGamblingForm({ time: todayStr() === viewDate ? nowTimeStr() : '', location: defaultGamblingLocation, trigger: '', amount_spent: '', amount_lost: '' })
+                  setGamblingForm({ time: todayStr() === viewDate ? nowTimeStr() : '', location: defaultGamblingLocation, trigger: '', amount: '', result: 'lost' })
                   setGamblingOther({ location: '', trigger: '' }); setGamblingError(''); setShowGamblingModal(true)
                 }} style={{ flex: 1 }}>
                   <span className={styles.fabPlus}>＋</span> ギャンブルした
@@ -882,10 +896,34 @@ export default function BehaviorPage() {
               ))}
             </div>
             {gamblingForm.trigger === '__other__' && <input className={styles.otherInput} value={gamblingOther.trigger} onChange={e => setGamblingOther(o => ({ ...o, trigger: e.target.value }))} placeholder="きっかけを入力（次回から選べます）" />}
-            <p className={styles.fieldLabel} style={{ marginTop: 16 }}>使った金額</p>
-            <input className={styles.otherInput} type="number" placeholder="例: 10000" value={gamblingForm.amount_spent} onChange={e => setGamblingForm(f => ({ ...f, amount_spent: e.target.value }))} style={{ width: '100%' }} />
-            <p className={styles.fieldLabel} style={{ marginTop: 12 }}>負けた金額</p>
-            <input className={styles.otherInput} type="number" placeholder="例: 8000" value={gamblingForm.amount_lost} onChange={e => setGamblingForm(f => ({ ...f, amount_lost: e.target.value }))} style={{ width: '100%' }} />
+            <p className={styles.fieldLabel} style={{ marginTop: 16 }}>金額</p>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input
+                className={styles.otherInput}
+                type="number"
+                placeholder="例: 5000"
+                value={gamblingForm.amount}
+                onChange={e => setGamblingForm(f => ({ ...f, amount: e.target.value }))}
+                style={{ flex: 1 }}
+              />
+              <span style={{ fontSize: 14, color: '#374151' }}>円</span>
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              <button
+                type="button"
+                onClick={() => setGamblingForm(f => ({ ...f, result: 'lost' }))}
+                style={{ flex: 1, padding: '10px', borderRadius: 8, border: '2px solid', borderColor: gamblingForm.result === 'lost' ? '#ef4444' : '#e2e8f0', background: gamblingForm.result === 'lost' ? '#fef2f2' : '#f8fafc', color: gamblingForm.result === 'lost' ? '#dc2626' : '#64748b', fontWeight: gamblingForm.result === 'lost' ? 700 : 400, fontSize: 15, cursor: 'pointer' }}
+              >
+                負けた ❌
+              </button>
+              <button
+                type="button"
+                onClick={() => setGamblingForm(f => ({ ...f, result: 'won' }))}
+                style={{ flex: 1, padding: '10px', borderRadius: 8, border: '2px solid', borderColor: gamblingForm.result === 'won' ? '#15803d' : '#e2e8f0', background: gamblingForm.result === 'won' ? '#f0fdf4' : '#f8fafc', color: gamblingForm.result === 'won' ? '#15803d' : '#64748b', fontWeight: gamblingForm.result === 'won' ? 700 : 400, fontSize: 15, cursor: 'pointer' }}
+              >
+                勝った ✓
+              </button>
+            </div>
             {gamblingError && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 8, padding: '8px 12px', background: '#fef2f2', borderRadius: 8 }}>{gamblingError}</p>}
             <button className={styles.nextBtn} disabled={saving} onClick={handleSaveGamblingEntry}>{saving ? '保存中...' : '記録する'}</button>
           </div>
