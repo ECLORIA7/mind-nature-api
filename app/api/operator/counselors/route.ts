@@ -70,12 +70,12 @@ export async function POST(req: NextRequest) {
 
   let member_number: number | null = null
   if (hospital_id) {
-    const { data: existing } = await supabaseAdmin
-      .from('counselors')
-      .select('counselors.member_number, profiles!inner(hospital_id)')
-      .eq('profiles.hospital_id', hospital_id)
-    const max = (existing ?? []).reduce((m: number, c: { member_number: number | null }) => Math.max(m, c.member_number ?? 0), 0)
-    member_number = max + 1
+    const { data: sameTeam } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('hospital_id', hospital_id)
+      .eq('role', 'counselor')
+    member_number = (sameTeam?.length ?? 0) + 1
   }
   await supabaseAdmin.from('counselors').insert({ id: userId, rank, member_number })
 

@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     birth_date: profile?.birth_date ?? '',
     phone: profile?.phone ?? '',
     email: authUser?.user?.email ?? '',
-    hospital_name: (profile?.hospitals as { name: string } | null)?.name ?? '',
+    hospital_name: (profile?.hospitals as unknown as { name: string } | null)?.name ?? '',
     member_number: counselor?.member_number ?? null,
     rank: counselor?.rank ?? 1,
     created_at: authUser?.user?.created_at ?? '',
