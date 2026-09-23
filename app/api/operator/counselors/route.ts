@@ -67,7 +67,17 @@ export async function POST(req: NextRequest) {
   await supabaseAdmin.from('profiles').insert({
     id: userId, role: 'counselor', full_name: name, hospital_id,
   })
-  await supabaseAdmin.from('counselors').insert({ id: userId, rank })
+
+  let member_number: number | null = null
+  if (hospital_id) {
+    const { data: existing } = await supabaseAdmin
+      .from('counselors')
+      .select('counselors.member_number, profiles!inner(hospital_id)')
+      .eq('profiles.hospital_id', hospital_id)
+    const max = (existing ?? []).reduce((m: number, c: { member_number: number | null }) => Math.max(m, c.member_number ?? 0), 0)
+    member_number = max + 1
+  }
+  await supabaseAdmin.from('counselors').insert({ id: userId, rank, member_number })
 
   await resend.emails.send({
     from: 'MindNature <noreply@mind-nature.net>',
