@@ -153,7 +153,7 @@ export default function PreviewPage() {
 
   // Load test detail
   useEffect(() => {
-    if (!selectedTestId) return
+    if (selectedTestId === null) return
     setTestDetail(null)
     setSelectedResult(null)
     setTestDetailLoading(true)
