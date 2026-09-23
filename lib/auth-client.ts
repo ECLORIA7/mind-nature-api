@@ -36,15 +36,59 @@ export function clearSession() {
   localStorage.removeItem('user')
 }
 
+function buildHeaders(token: string | null, extra?: HeadersInit): HeadersInit {
+  return {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(extra ?? {}),
+  }
+}
+
+let refreshing: Promise<string | null> | null = null
+
+async function tryRefresh(): Promise<string | null> {
+  if (refreshing) return refreshing
+  refreshing = (async () => {
+    const refreshToken = localStorage.getItem('refresh_token')
+    if (!refreshToken) return null
+    try {
+      const res = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      })
+      if (!res.ok) return null
+      const data = await res.json()
+      localStorage.setItem('access_token', data.access_token)
+      localStorage.setItem('refresh_token', data.refresh_token)
+      return data.access_token as string
+    } catch {
+      return null
+    } finally {
+      refreshing = null
+    }
+  })()
+  return refreshing
+}
+
 export async function apiFetch(path: string, options: RequestInit = {}) {
   const token = getToken()
   const res = await fetch(`/api${path}`, {
     ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
+    headers: buildHeaders(token, options.headers as HeadersInit),
   })
+
+  if (res.status === 401) {
+    const newToken = await tryRefresh()
+    if (newToken) {
+      return fetch(`/api${path}`, {
+        ...options,
+        headers: buildHeaders(newToken, options.headers as HeadersInit),
+      })
+    }
+    clearSession()
+    window.location.href = '/login'
+  }
+
   return res
 }
