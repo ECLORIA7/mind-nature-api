@@ -17,6 +17,8 @@ export default function OrganizationsPage() {
   const [loading, setLoading] = useState(true)
   const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null)
   const [expandedGroupId, setExpandedGroupId] = useState<number | null>(null)
+  const [viewerRole, setViewerRole] = useState<string>('')
+  const [viewerRank, setViewerRank] = useState<number>(1)
 
   const [showOrgForm, setShowOrgForm] = useState(false)
   const [editOrgId, setEditOrgId] = useState<number | null>(null)
@@ -36,6 +38,8 @@ export default function OrganizationsPage() {
     const data = await res.json()
     setOrgs(data.organizations ?? [])
     setGroups(data.groups ?? [])
+    setViewerRole(data.viewer_role ?? '')
+    setViewerRank(data.viewer_rank ?? 1)
     setLoading(false)
   }
 
@@ -122,6 +126,9 @@ export default function OrganizationsPage() {
     await fetchGroupMembers(groupId)
   }
 
+  const canEditOrg = viewerRole === 'admin'
+  const canEditGroup = viewerRole === 'admin' || viewerRank === 0
+
   const selectedOrg = orgs.find((o) => o.id === selectedOrgId)
   const orgGroups = groups.filter((g) => g.organization_id === selectedOrgId)
 
@@ -131,9 +138,11 @@ export default function OrganizationsPage() {
     <div>
       <div className={styles.header}>
         <h1 className={styles.heading}>組織・グループ管理</h1>
-        <button className={styles.addBtn} onClick={() => { setShowOrgForm(true); setEditOrgId(null); setOrgForm({ name: '', description: '' }) }}>
-          + 組織を追加
-        </button>
+        {canEditOrg && (
+          <button className={styles.addBtn} onClick={() => { setShowOrgForm(true); setEditOrgId(null); setOrgForm({ name: '', description: '' }) }}>
+            + 組織を追加
+          </button>
+        )}
       </div>
 
       {showOrgForm && (
@@ -171,12 +180,16 @@ export default function OrganizationsPage() {
             <>
               <div className={styles.detailHeader}>
                 <h2 className={styles.detailName}>{selectedOrg.name}</h2>
-                <button className={styles.editBtn} onClick={() => { setEditOrgId(selectedOrg.id); setOrgForm({ name: selectedOrg.name, description: selectedOrg.description ?? '' }); setShowOrgForm(true) }}>編集</button>
+                {canEditOrg && (
+                  <button className={styles.editBtn} onClick={() => { setEditOrgId(selectedOrg.id); setOrgForm({ name: selectedOrg.name, description: selectedOrg.description ?? '' }); setShowOrgForm(true) }}>編集</button>
+                )}
               </div>
 
               <div className={styles.sectionHeader}>
                 <span className={styles.sectionTitle}>グループ一覧</span>
-                <button className={styles.smallBtn} onClick={() => { setShowGroupForm(true); setEditGroupId(null); setGroupForm({ name: '', description: '' }) }}>+ グループを追加</button>
+                {canEditGroup && (
+                  <button className={styles.smallBtn} onClick={() => { setShowGroupForm(true); setEditGroupId(null); setGroupForm({ name: '', description: '' }) }}>+ グループを追加</button>
+                )}
               </div>
 
               {showGroupForm && (
@@ -205,7 +218,9 @@ export default function OrganizationsPage() {
                       <div className={styles.groupRowHeader} onClick={() => toggleGroup(group.id)}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                           <span className={styles.groupRowName}>{group.name}</span>
-                          <button className={styles.editBtn} onClick={(e) => { e.stopPropagation(); setEditGroupId(group.id); setGroupForm({ name: group.name, description: group.description ?? '' }); setShowGroupForm(true) }}>編集</button>
+                          {canEditGroup && (
+                            <button className={styles.editBtn} onClick={(e) => { e.stopPropagation(); setEditGroupId(group.id); setGroupForm({ name: group.name, description: group.description ?? '' }); setShowGroupForm(true) }}>編集</button>
+                          )}
                           <a href={`/counselor/group-chat/${group.id}`} style={{ fontSize: 12, color: '#1e40af', textDecoration: 'none' }} onClick={(e) => e.stopPropagation()}>チャットへ</a>
                         </div>
                         <span className={styles.groupRowCount}>{isExpanded && currentMembers ? `${currentMembers.length}名` : '▼'}</span>
@@ -221,24 +236,28 @@ export default function OrganizationsPage() {
                                   <span className={styles.memberName}>{m.full_name}</span>
                                   {m.nickname && <span className={styles.memberNickname}>（{m.nickname}）</span>}
                                 </span>
-                                <button className={styles.removeBtn} onClick={() => handleRemoveMember(group.id, m.id)}>削除</button>
+                                {canEditGroup && (
+                                  <button className={styles.removeBtn} onClick={() => handleRemoveMember(group.id, m.id)}>削除</button>
+                                )}
                               </div>
                             ))}
                           </div>
 
-                          {addMemberGroupId === group.id ? (
-                            <div className={styles.addMemberRow}>
-                              <select className={styles.select} value={selectedPatientId} onChange={(e) => setSelectedPatientId(e.target.value)}>
-                                <option value="">クライアントを選択</option>
-                                {nonMembers.map((p) => (
-                                  <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? `（${p.nickname}）` : ''}</option>
-                                ))}
-                              </select>
-                              <button className={styles.addMemberBtn} onClick={() => handleAddMember(group.id)}>追加</button>
-                              <button className={styles.cancelBtn} onClick={() => { setAddMemberGroupId(null); setSelectedPatientId('') }}>閉じる</button>
-                            </div>
-                          ) : (
-                            <button className={styles.smallBtn} onClick={() => { setAddMemberGroupId(group.id); setSelectedPatientId('') }}>+ メンバーを追加</button>
+                          {canEditGroup && (
+                            addMemberGroupId === group.id ? (
+                              <div className={styles.addMemberRow}>
+                                <select className={styles.select} value={selectedPatientId} onChange={(e) => setSelectedPatientId(e.target.value)}>
+                                  <option value="">クライアントを選択</option>
+                                  {nonMembers.map((p) => (
+                                    <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? `（${p.nickname}）` : ''}</option>
+                                  ))}
+                                </select>
+                                <button className={styles.addMemberBtn} onClick={() => handleAddMember(group.id)}>追加</button>
+                                <button className={styles.cancelBtn} onClick={() => { setAddMemberGroupId(null); setSelectedPatientId('') }}>閉じる</button>
+                              </div>
+                            ) : (
+                              <button className={styles.smallBtn} onClick={() => { setAddMemberGroupId(group.id); setSelectedPatientId('') }}>+ メンバーを追加</button>
+                            )
                           )}
                         </div>
                       )}
