@@ -56,6 +56,14 @@ async function registerPatient(body: Record<string, unknown>, hospitalId: number
 
   await supabaseAdmin.from('patients').insert({ id: userId, age: null, sex: 0, profile_completed: false })
 
+  // カテゴリー登録（カウンセラーが事前設定）
+  const addictions = body.addictions as { addiction_id: number; behavior_type: string }[] | undefined
+  if (Array.isArray(addictions) && addictions.length > 0) {
+    await supabaseAdmin.from('patient_addictions').insert(
+      addictions.map((a) => ({ patient_id: userId, addiction_id: a.addiction_id, behavior_type: a.behavior_type }))
+    )
+  }
+
   await resend.emails.send({
     from: 'MindNature <noreply@mind-nature.net>',
     to: email,
