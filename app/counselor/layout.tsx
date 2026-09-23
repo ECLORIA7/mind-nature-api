@@ -27,7 +27,7 @@ export default function CounselorLayout({ children }: { children: React.ReactNod
     { href: '/counselor/patients', label: 'クライアント一覧', active: pathname.startsWith('/counselor/patients') },
     { href: '/counselor/clients', label: '一覧（管理者）', active: pathname.startsWith('/counselor/clients') },
     { href: '/counselor/register', label: 'クライアント登録', active: pathname === '/counselor/register' },
-    { href: '/counselor/organizations', label: '組織・グループ', active: pathname.startsWith('/counselor/organizations') || pathname.startsWith('/counselor/group-chat') },
+    { href: '/counselor/organizations', label: 'グループ', active: pathname.startsWith('/counselor/organizations') || pathname.startsWith('/counselor/group-chat') },
     { href: '/counselor/mypage', label: 'マイページ', active: pathname === '/counselor/mypage' },
   ]
 
