@@ -20,8 +20,8 @@ type Todo = { id: string; title?: string; content?: string; completed: boolean }
 type Message = { id: string; poster_id: string; content: string; sequence_num: number; profiles?: { full_name: string } }
 type Group = { id: string; name: string; organizations?: { name: string } }
 
-type Tab = 'ToDo' | '行動の記録' | 'チャット' | 'グループ' | 'マイページ' | 'カウンセラー記録'
-const PATIENT_TABS: Tab[] = ['ToDo', '行動の記録', 'チャット', 'グループ', 'マイページ']
+type Tab = 'ToDo' | '行動の記録' | 'テスト' | 'チャット' | 'グループ' | 'マイページ' | 'カウンセラー記録'
+const PATIENT_TABS: Tab[] = ['ToDo', '行動の記録', 'テスト', 'チャット', 'グループ', 'マイページ']
 
 export default function PreviewPage() {
   const { patientId } = useParams<{ patientId: string }>()
@@ -53,6 +53,19 @@ export default function PreviewPage() {
   // Groups
   const [groups, setGroups] = useState<Group[]>([])
   const [groupsLoaded, setGroupsLoaded] = useState(false)
+
+  // Tests
+  type TestItem = { id: number; name: string; type: number; enabled: boolean; attempt_count: number; latest: { score: number; taken_at: string } | null }
+  type TestResult = { id: string; attempt_number: number; score: number; taken_at: string; answers: { question_id: number; selected_choice_ids: number[] }[] }
+  type TestChoice = { id: number; choice_order: number; text: string; is_correct: boolean; score: number }
+  type TestQuestion = { id: number; question_order: number; title: string; test_choices: TestChoice[] }
+  type TestGrade = { max_score: number; grade_text: string }
+  const [tests, setTests] = useState<TestItem[]>([])
+  const [testsLoaded, setTestsLoaded] = useState(false)
+  const [selectedTestId, setSelectedTestId] = useState<number | null>(null)
+  const [testDetail, setTestDetail] = useState<{ questions: TestQuestion[]; grades: TestGrade[]; results: TestResult[] } | null>(null)
+  const [testDetailLoading, setTestDetailLoading] = useState(false)
+  const [selectedResult, setSelectedResult] = useState<TestResult | null>(null)
 
   // 行動の記録
   const [behaviorAddicId, setBehaviorAddicId] = useState<number | null>(null)
@@ -120,6 +133,26 @@ export default function PreviewPage() {
       .then((d) => setGroups(d.groups ?? []))
       .finally(() => setGroupsLoaded(true))
   }, [activeTab, patientId, groupsLoaded])
+
+  // Load tests list
+  useEffect(() => {
+    if (activeTab !== 'テスト' || testsLoaded) return
+    apiFetch(`/counselor/patient/tests?patient_id=${patientId}`)
+      .then((r) => r.json())
+      .then((d) => setTests(d.tests ?? []))
+      .finally(() => setTestsLoaded(true))
+  }, [activeTab, patientId, testsLoaded])
+
+  // Load test detail
+  useEffect(() => {
+    if (!selectedTestId) return
+    setTestDetailLoading(true)
+    setSelectedResult(null)
+    apiFetch(`/patient/tests/${selectedTestId}?patient_id=${patientId}`)
+      .then((r) => r.json())
+      .then((d) => setTestDetail({ questions: d.questions ?? [], grades: d.grades ?? [], results: d.results ?? [] }))
+      .finally(() => setTestDetailLoading(false))
+  }, [selectedTestId, patientId])
 
   // Load behavior calendar (月間)
   useEffect(() => {
@@ -298,6 +331,153 @@ export default function PreviewPage() {
             )}
           </div>
         )}
+
+        {/* ===== テスト ===== */}
+        {activeTab === 'テスト' && (() => {
+          function getGrade(grades: TestGrade[], score: number) {
+            for (const g of grades) { if (score <= g.max_score) return g.grade_text }
+            return grades[grades.length - 1]?.grade_text ?? ''
+          }
+
+          // 結果詳細表示中
+          if (selectedResult && testDetail) {
+            const test = tests.find(t => t.id === selectedTestId)
+            const qCount = testDetail.questions.length
+            return (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <button onClick={() => setSelectedResult(null)}
+                    style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#15803d' }}>‹</button>
+                  <h1 className={styles.heading} style={{ margin: 0 }}>{test?.name} — {selectedResult.attempt_number}回目の結果</h1>
+                </div>
+                <div style={{ background: '#f0fdf4', border: '2px solid #86efac', borderRadius: 14, padding: 18, textAlign: 'center', marginBottom: 16 }}>
+                  <div style={{ fontSize: 36, fontWeight: 800, color: '#15803d' }}>
+                    {test?.type === 0 ? `${selectedResult.score}点` : `${selectedResult.score}/${qCount}点`}
+                  </div>
+                  {test?.type === 0 && (
+                    <div style={{ fontSize: 14, color: '#166534', marginTop: 4 }}>{getGrade(testDetail.grades, selectedResult.score)}</div>
+                  )}
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>
+                    {new Date(selectedResult.taken_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {testDetail.questions.map((q, qi) => {
+                    const ans = selectedResult.answers.find(a => a.question_id === q.id)
+                    const selectedIds = new Set(ans?.selected_choice_ids ?? [])
+                    const correctIds = new Set(q.test_choices.filter(c => c.is_correct).map(c => c.id))
+                    const isCorrect = test?.type === 1
+                      ? [...correctIds].every(id => selectedIds.has(id)) && [...selectedIds].every(id => correctIds.has(id))
+                      : null
+                    return (
+                      <div key={q.id} style={{ background: 'white', border: '1.5px solid',
+                        borderColor: isCorrect === true ? '#86efac' : isCorrect === false ? '#fca5a5' : '#e2e8f0',
+                        borderRadius: 12, padding: '12px 14px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                          {test?.type === 1 && <span style={{ fontSize: 16 }}>{isCorrect ? '⭕' : '❌'}</span>}
+                          <span style={{ fontSize: 12, color: '#64748b' }}>{qi + 1}問目</span>
+                        </div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#1e293b', marginBottom: 8, lineHeight: 1.5 }}>{q.title}</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {q.test_choices.map(c => {
+                            const wasSelected = selectedIds.has(c.id)
+                            let bg = 'transparent'; let border = '#e2e8f0'
+                            if (test?.type === 1) {
+                              if (wasSelected && c.is_correct) { bg = '#dcfce7'; border = '#86efac' }
+                              else if (wasSelected && !c.is_correct) { bg = '#fee2e2'; border = '#fca5a5' }
+                              else if (!wasSelected && c.is_correct) { bg = '#fef9c3'; border = '#fde047' }
+                            } else if (wasSelected) { bg = '#dcfce7'; border = '#86efac' }
+                            return (
+                              <div key={c.id} style={{ padding: '6px 10px', borderRadius: 8, border: `1.5px solid ${border}`,
+                                background: bg, display: 'flex', justifyContent: 'space-between', fontSize: 12, color: '#334155' }}>
+                                <span>{c.text}</span>
+                                {test?.type === 0 && wasSelected && <span style={{ color: '#15803d', fontWeight: 600 }}>{c.score}点</span>}
+                                {test?.type === 1 && !wasSelected && c.is_correct && <span style={{ color: '#a16207', fontSize: 11 }}>正解</span>}
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          }
+
+          // テスト詳細（過去結果一覧）
+          if (selectedTestId !== null) {
+            const test = tests.find(t => t.id === selectedTestId)
+            const qCount = testDetail?.questions.length ?? 0
+            return (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+                  <button onClick={() => setSelectedTestId(null)}
+                    style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer', color: '#15803d' }}>‹</button>
+                  <h1 className={styles.heading} style={{ margin: 0 }}>{test?.name}</h1>
+                </div>
+                {testDetailLoading ? <p>読み込み中...</p> : (
+                  testDetail?.results.length === 0 ? (
+                    <p style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', padding: '32px 0' }}>まだ受験していません</p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {[...(testDetail?.results ?? [])].reverse().map(r => (
+                        <button key={r.id} onClick={() => setSelectedResult(r)}
+                          style={{ background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 12, padding: '12px 14px',
+                            textAlign: 'left', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: '#1e293b' }}>{r.attempt_number}回目</div>
+                            <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                              {new Date(r.taken_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: '#15803d' }}>
+                              {test?.type === 0 ? `${r.score}点` : `${r.score}/${qCount}点`}
+                            </div>
+                            {test?.type === 0 && testDetail && (
+                              <div style={{ fontSize: 11, color: '#64748b' }}>{getGrade(testDetail.grades, r.score)}</div>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )
+                )}
+              </div>
+            )
+          }
+
+          // テスト一覧
+          return (
+            <div>
+              <h1 className={styles.heading}>テスト</h1>
+              {!testsLoaded ? <p>読み込み中...</p> : tests.filter(t => t.enabled).length === 0 ? (
+                <p style={{ color: '#94a3b8', fontSize: 14, textAlign: 'center', padding: '48px 0' }}>割り当てられたテストはありません</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {tests.filter(t => t.enabled).map(t => (
+                    <button key={t.id} onClick={() => setSelectedTestId(t.id)}
+                      style={{ background: 'white', border: '1.5px solid #e2e8f0', borderRadius: 14, padding: '14px 16px',
+                        textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#dcfce7',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
+                        {t.type === 0 ? '📋' : '✏️'}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', marginBottom: 2 }}>{t.name}</div>
+                        <div style={{ fontSize: 12, color: '#94a3b8' }}>
+                          {t.attempt_count === 0 ? '未受験' : `${t.attempt_count}回受験 · 最新: ${t.latest?.score}点`}
+                        </div>
+                      </div>
+                      <span style={{ color: '#94a3b8', fontSize: 18 }}>›</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })()}
 
         {/* ===== 行動の記録 ===== */}
         {activeTab === '行動の記録' && (() => {
