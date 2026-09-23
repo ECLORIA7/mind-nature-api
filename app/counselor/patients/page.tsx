@@ -123,12 +123,20 @@ export default function PatientsPage() {
                   ))}
                 </div>
               </div>
-              <button
-                onClick={(e) => openEdit(p, e)}
-                style={{ position: 'absolute', top: 10, right: 10, background: 'none', border: '1px solid #cbd5e1', borderRadius: 6, padding: '3px 10px', fontSize: 12, color: '#64748b', cursor: 'pointer' }}
-              >
-                編集
-              </button>
+              <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6 }}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); router.push(`/counselor/patients/${p.id}`) }}
+                  style={{ background: '#1e40af', border: 'none', borderRadius: 6, padding: '3px 10px', fontSize: 12, color: '#fff', cursor: 'pointer' }}
+                >
+                  詳細
+                </button>
+                <button
+                  onClick={(e) => openEdit(p, e)}
+                  style={{ background: 'none', border: '1px solid #cbd5e1', borderRadius: 6, padding: '3px 10px', fontSize: 12, color: '#64748b', cursor: 'pointer' }}
+                >
+                  編集
+                </button>
+              </div>
             </div>
           ))}
         </div>
