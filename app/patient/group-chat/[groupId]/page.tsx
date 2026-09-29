@@ -56,6 +56,16 @@ export default function PatientGroupChatPage() {
     setSending(false)
   }
 
+  const deleteMessage = async (messageId: number) => {
+    await apiFetch('/patient/group-messages', {
+      method: 'DELETE',
+      body: JSON.stringify({ message_id: messageId }),
+    })
+    await fetchMessages()
+  }
+
+  const canDelete = (idx: number) => !messages.slice(idx + 1).some((m) => !m.is_mine)
+
   if (loading) return <p>読み込み中...</p>
 
   return (
@@ -66,21 +76,28 @@ export default function PatientGroupChatPage() {
       </div>
       <div className={styles.messages}>
         {messages.length === 0 && <p className={styles.empty}>メッセージはありません</p>}
-        {messages.map((m) => (
+        {messages.map((m, idx) => (
           <div key={m.id} className={m.is_mine ? styles.rowMe : styles.rowOther}>
             {!m.is_mine && <div className={styles.senderName}>{m.sender_name}</div>}
             <div className={m.is_mine ? styles.bubbleMe : styles.bubbleOther}>{m.content}</div>
+            {m.is_mine && canDelete(idx) && (
+              <button
+                onClick={() => deleteMessage(m.id)}
+                style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 11, cursor: 'pointer', padding: '2px 4px', alignSelf: 'flex-end' }}
+              >削除</button>
+            )}
           </div>
         ))}
         <div ref={bottomRef} />
       </div>
       <div className={styles.inputRow}>
-        <input
+        <textarea
           className={styles.input}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && send()}
           placeholder="メッセージを入力..."
+          rows={2}
+          style={{ resize: 'none' }}
         />
         <button className={styles.sendBtn} onClick={send} disabled={sending}>送信</button>
       </div>

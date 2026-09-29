@@ -60,3 +60,29 @@ export async function POST(req: NextRequest) {
   if (error) return Response.json({ error: error.message }, { status: 500 })
   return Response.json({ ok: true })
 }
+
+export async function DELETE(req: NextRequest) {
+  const user = await getAuthUser(req)
+  const err = requireCounselor(user)
+  if (err) return err
+
+  const { message_id } = await req.json()
+  if (!message_id) return Response.json({ error: 'message_idが必要です' }, { status: 400 })
+
+  const { data: msg } = await supabaseAdmin
+    .from('group_messages')
+    .select('id, sender_id')
+    .eq('id', message_id)
+    .single()
+
+  if (!msg) return Response.json({ error: 'メッセージが見つかりません' }, { status: 404 })
+  if (msg.sender_id !== user!.id) return Response.json({ error: '自分のメッセージのみ削除できます' }, { status: 403 })
+
+  const { error } = await supabaseAdmin
+    .from('group_messages')
+    .delete()
+    .eq('id', message_id)
+
+  if (error) return Response.json({ error: error.message }, { status: 500 })
+  return Response.json({ ok: true })
+}

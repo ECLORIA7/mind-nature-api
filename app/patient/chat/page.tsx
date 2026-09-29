@@ -58,12 +58,13 @@ export default function PatientChatPage() {
         <div ref={bottomRef} />
       </div>
       <div className={styles.inputRow}>
-        <input
+        <textarea
           className={styles.input}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && send()}
           placeholder="メッセージを入力..."
+          rows={2}
+          style={{ resize: 'none' }}
         />
         <button className={styles.sendBtn} onClick={send} disabled={sending}>送信</button>
       </div>
