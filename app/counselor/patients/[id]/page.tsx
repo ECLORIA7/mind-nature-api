@@ -33,6 +33,8 @@ export default function PatientDetailPage() {
   const [loading, setLoading] = useState(true)
   const [tests, setTests] = useState<TestItem[]>([])
   const [testsLoading, setTestsLoading] = useState(true)
+  const [programStartedAt, setProgramStartedAt] = useState<string | null | undefined>(undefined)
+  const [programStarting, setProgramStarting] = useState(false)
 
   // 依存症管理
   const [showAddAddicForm, setShowAddAddicForm] = useState(false)
@@ -74,7 +76,17 @@ export default function PatientDetailPage() {
     loadDetail()
     loadTests()
     apiFetch('/addictions').then(r => r.json()).then(d => setAllAddictions(d.addictions ?? []))
+    apiFetch(`/patient/fun-events/abstract?patient_id=${id}`)
+      .then(r => r.json()).then(d => setProgramStartedAt(d.started_at ?? null))
   }, [id])
+
+  const handleStartProgram = async () => {
+    if (!confirm('カウンセリングプログラムを開始しますか？\n（良かったことの書き出しが患者画面に表示されます）')) return
+    setProgramStarting(true)
+    await apiFetch('/counselor/start-program', { method: 'POST', body: JSON.stringify({ patient_id: id }) })
+    setProgramStartedAt(new Date().toISOString())
+    setProgramStarting(false)
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -237,6 +249,31 @@ export default function PatientDetailPage() {
           <div className={styles.actions}>
             <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>{saving ? '保存中...' : '保存'}</button>
             <button className={styles.cancelBtn} onClick={() => setEditing(false)}>キャンセル</button>
+          </div>
+        )}
+      </div>
+
+      {/* カウンセリングプログラム */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>カウンセリングプログラム</h2>
+        {programStartedAt === undefined ? (
+          <p style={{ color: '#94a3b8', fontSize: 14 }}>読み込み中...</p>
+        ) : programStartedAt ? (
+          <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '12px 16px', fontSize: 14, color: '#15803d' }}>
+            ✅ プログラム開始済み：{new Date(programStartedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </div>
+        ) : (
+          <div>
+            <p style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>
+              プログラムを開始すると、クライアントの「良かったことの書き出し」画面が有効になります。
+            </p>
+            <button
+              onClick={handleStartProgram}
+              disabled={programStarting}
+              style={{ background: '#15803d', color: 'white', border: 'none', borderRadius: 8, padding: '10px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: programStarting ? 0.6 : 1 }}
+            >
+              {programStarting ? '開始中...' : 'プログラムを開始する'}
+            </button>
           </div>
         )}
       </div>

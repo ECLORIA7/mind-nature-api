@@ -29,6 +29,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
 
   const links = [
     { href: '/patient/todo', label: 'ToDo', active: pathname === '/patient/todo' },
+    { href: '/patient/good-things', label: '良かったこと', active: pathname === '/patient/good-things' },
     { href: '/patient/behavior', label: '行動の記録', active: pathname.startsWith('/patient/behavior') },
     { href: '/patient/tests', label: 'テスト', active: pathname.startsWith('/patient/tests') },
     { href: '/patient/chat', label: 'チャット', active: pathname === '/patient/chat' },
