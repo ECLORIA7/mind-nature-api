@@ -599,6 +599,12 @@ export default function BehaviorPage() {
           {/* === 禁煙モード === */}
           {isSmoking && !loadingDay && (
             <>
+              {dayRecord?.abstained === true && smokingEntries.length === 0 && (
+                <div className={styles.abstainedBadge}>
+                  <span>⭕ この日は禁煙できました！</span>
+                  <button className={styles.undoBtn} onClick={handleDeleteAbstained}>取り消す</button>
+                </div>
+              )}
               {smokingEntries.length > 0 ? (
                 <div style={{ marginBottom: 12 }}>
                   <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 8 }}>この日の喫煙: <strong style={{ color: '#ef4444' }}>{smokingEntries.length}本</strong></p>
@@ -651,7 +657,7 @@ export default function BehaviorPage() {
                   ))}
                 </div>
               ) : (
-                <p className={styles.noRecord}>まだ記録がありません</p>
+                !dayRecord && <p className={styles.noRecord}>まだ記録がありません</p>
               )}
               <div className={styles.fabWrap} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button className={styles.fab} onClick={handleSmokeNow} disabled={saving} style={{ flex: 1, background: '#ef4444' }}>
@@ -670,6 +676,12 @@ export default function BehaviorPage() {
           {/* === ギャンブルモード === */}
           {isGambling && !loadingDay && (
             <>
+              {dayRecord?.abstained === true && gamblingEntries.length === 0 && (
+                <div className={styles.abstainedBadge}>
+                  <span>⭕ この日はギャンブルをしませんでした</span>
+                  <button className={styles.undoBtn} onClick={handleDeleteAbstained}>取り消す</button>
+                </div>
+              )}
               {gamblingEntries.length > 0 ? (
                 <div>
                   {gamblingEntries.map(entry => (
@@ -708,7 +720,7 @@ export default function BehaviorPage() {
                   </div>
                 </div>
               ) : (
-                <p className={styles.noRecord}>まだ記録がありません</p>
+                !dayRecord && <p className={styles.noRecord}>まだ記録がありません</p>
               )}
               <div className={styles.fabWrap} style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                 <button className={styles.fab} onClick={() => {
