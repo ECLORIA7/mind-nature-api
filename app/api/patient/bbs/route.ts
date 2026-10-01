@@ -68,3 +68,29 @@ export async function POST(req: NextRequest) {
 
   return Response.json({ message: 'メッセージを送信しました', data }, { status: 201 })
 }
+
+export async function DELETE(req: NextRequest) {
+  const user = await getAuthUser(req)
+  const authError = requireAuth(user)
+  if (authError) return authError
+
+  const { message_id } = await req.json().catch(() => ({}))
+  if (!message_id) return Response.json({ error: 'message_idが必要です' }, { status: 400 })
+
+  const { data: msg } = await supabaseAdmin
+    .from('bbs_messages')
+    .select('id, poster_id')
+    .eq('id', message_id)
+    .single()
+
+  if (!msg) return Response.json({ error: 'メッセージが見つかりません' }, { status: 404 })
+  if (msg.poster_id !== user!.id) return Response.json({ error: '自分のメッセージのみ削除できます' }, { status: 403 })
+
+  const { error } = await supabaseAdmin
+    .from('bbs_messages')
+    .delete()
+    .eq('id', message_id)
+
+  if (error) return Response.json({ error: error.message }, { status: 500 })
+  return Response.json({ ok: true })
+}

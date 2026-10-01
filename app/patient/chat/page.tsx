@@ -53,6 +53,16 @@ export default function PatientChatPage() {
     fetchMessages(id).finally(() => setLoading(false))
   }
 
+  const deleteMessage = async (messageId: string) => {
+    await apiFetch('/patient/bbs', {
+      method: 'DELETE',
+      body: JSON.stringify({ message_id: messageId }),
+    })
+    if (selectedAddic) await fetchMessages(selectedAddic)
+  }
+
+  const canDelete = (idx: number) => !messages.slice(idx + 1).some((m) => m.poster_id !== user?.id)
+
   const send = async () => {
     if (!input.trim() || !selectedAddic) return
     setSending(true)
@@ -98,12 +108,18 @@ export default function PatientChatPage() {
       )}
       <div className={styles.messages}>
         {messages.length === 0 && <p className={styles.empty}>メッセージはありません</p>}
-        {messages.map((m) => {
+        {messages.map((m, idx) => {
           const isMe = m.poster_id === user?.id
           return (
             <div key={m.id} className={isMe ? styles.rowMe : styles.rowOther}>
               {!isMe && <div className={styles.senderName}>{m.profiles?.full_name ?? 'カウンセラー'}</div>}
               <div className={isMe ? styles.bubbleMe : styles.bubbleOther}>{m.content}</div>
+              {isMe && canDelete(idx) && (
+                <button
+                  onClick={() => deleteMessage(m.id)}
+                  style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: 11, cursor: 'pointer', padding: '2px 4px', alignSelf: 'flex-end' }}
+                >削除</button>
+              )}
             </div>
           )
         })}
