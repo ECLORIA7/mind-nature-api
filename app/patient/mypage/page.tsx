@@ -56,6 +56,13 @@ export default function PatientMyPage() {
   const [pwError, setPwError] = useState('')
   const [pwDone, setPwDone] = useState(false)
 
+  const [emailOpen, setEmailOpen] = useState(false)
+  const [newEmail, setNewEmail] = useState('')
+  const [confirmEmail, setConfirmEmail] = useState('')
+  const [emailSaving, setEmailSaving] = useState(false)
+  const [emailError, setEmailError] = useState('')
+  const [emailDone, setEmailDone] = useState(false)
+
   const fetchProfile = () =>
     apiFetch('/client/profile')
       .then((r) => r.json())
@@ -76,6 +83,22 @@ export default function PatientMyPage() {
 
   const setSymptom = (idx: number, key: string, val: string) =>
     setSymptomForms((prev) => prev.map((s, i) => i === idx ? { ...s, [key]: val } : s))
+
+  const handleEmailChange = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setEmailError('')
+    if (newEmail !== confirmEmail) { setEmailError('メールアドレスが一致しません'); return }
+    setEmailSaving(true)
+    const res = await apiFetch('/auth/change-email', {
+      method: 'POST',
+      body: JSON.stringify({ new_email: newEmail }),
+    })
+    const data = await res.json()
+    setEmailSaving(false)
+    if (!res.ok) { setEmailError(data.error ?? '変更に失敗しました'); return }
+    setEmailDone(true)
+    setNewEmail(''); setConfirmEmail('')
+  }
 
   const handlePwChange = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -245,6 +268,47 @@ export default function PatientMyPage() {
               style={{ background: '#1e40af', color: 'white', border: 'none', borderRadius: 8, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: pwSaving ? 0.6 : 1 }}
             >
               {pwSaving ? '変更中...' : 'パスワードを変更する'}
+            </button>
+          </form>
+        )}
+      </div>
+
+      <div className={styles.section}>
+        <button
+          onClick={() => { setEmailOpen((o) => !o); setEmailDone(false); setEmailError('') }}
+          style={{ background: 'none', border: 'none', fontSize: 15, fontWeight: 600, color: '#1e293b', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 8 }}
+        >
+          メールアドレスを変更する
+          <span style={{ fontSize: 12, color: '#94a3b8' }}>{emailOpen ? '▲' : '▼'}</span>
+        </button>
+        <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 4 }}>現在: {user?.email ?? '—'}</p>
+
+        {emailOpen && (
+          <form onSubmit={handleEmailChange} style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 400 }}>
+            {emailDone && <p style={{ color: '#15803d', fontSize: 14 }}>メールアドレスを変更しました。次回ログインから新しいアドレスをご使用ください。</p>}
+            <input
+              type="email"
+              placeholder="新しいメールアドレス"
+              value={newEmail}
+              onChange={(e) => setNewEmail(e.target.value)}
+              required
+              style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px', fontSize: 14 }}
+            />
+            <input
+              type="email"
+              placeholder="新しいメールアドレス（確認）"
+              value={confirmEmail}
+              onChange={(e) => setConfirmEmail(e.target.value)}
+              required
+              style={{ border: '1px solid #e2e8f0', borderRadius: 8, padding: '10px 12px', fontSize: 14 }}
+            />
+            {emailError && <p style={{ color: '#ef4444', fontSize: 13 }}>{emailError}</p>}
+            <button
+              type="submit"
+              disabled={emailSaving}
+              style={{ background: '#1e40af', color: 'white', border: 'none', borderRadius: 8, padding: '11px', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: emailSaving ? 0.6 : 1 }}
+            >
+              {emailSaving ? '変更中...' : 'メールアドレスを変更する'}
             </button>
           </form>
         )}
