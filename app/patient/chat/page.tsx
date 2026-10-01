@@ -22,8 +22,10 @@ export default function PatientChatPage() {
   const [loading, setLoading] = useState(true)
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const user = getUser()
+
+  useEffect(() => { setUserId(getUser()?.id ?? null) }, [])
 
   const fetchMessages = (adicId: number) =>
     apiFetch(`/patient/bbs?addic=${adicId}`)
@@ -61,7 +63,7 @@ export default function PatientChatPage() {
     if (selectedAddic) await fetchMessages(selectedAddic)
   }
 
-  const canDelete = (idx: number) => !messages.slice(idx + 1).some((m) => m.poster_id !== user?.id)
+  const canDelete = (idx: number) => !!userId && !messages.slice(idx + 1).some((m) => m.poster_id !== userId)
 
   const send = async () => {
     if (!input.trim() || !selectedAddic) return
@@ -109,7 +111,7 @@ export default function PatientChatPage() {
       <div className={styles.messages}>
         {messages.length === 0 && <p className={styles.empty}>メッセージはありません</p>}
         {messages.map((m, idx) => {
-          const isMe = m.poster_id === user?.id
+          const isMe = !!userId && m.poster_id === userId
           return (
             <div key={m.id} className={isMe ? styles.rowMe : styles.rowOther}>
               {!isMe && <div className={styles.senderName}>{m.profiles?.full_name ?? 'カウンセラー'}</div>}
