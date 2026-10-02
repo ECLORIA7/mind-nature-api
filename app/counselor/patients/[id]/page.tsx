@@ -36,6 +36,10 @@ export default function PatientDetailPage() {
   type FunEntry = { id: string; entry_num: number; content: string; created_at: string }
   const [funEntries, setFunEntries] = useState<FunEntry[]>([])
   const [funLoading, setFunLoading] = useState(true)
+  const [programStartedAt, setProgramStartedAt] = useState<string | null | undefined>(undefined)
+  const [programStage, setProgramStage] = useState<string | null>(null)
+  const [programStarting, setProgramStarting] = useState(false)
+  const [stageChanging, setStageChanging] = useState(false)
 
   // 依存症管理
   const [showAddAddicForm, setShowAddAddicForm] = useState(false)
@@ -78,9 +82,32 @@ export default function PatientDetailPage() {
     loadTests()
     apiFetch('/addictions').then(r => r.json()).then(d => setAllAddictions(d.addictions ?? []))
     apiFetch(`/patient/fun-events/abstract?patient_id=${id}`)
-      .then(r => r.json()).then(d => setFunEntries(d.entries ?? []))
+      .then(r => r.json()).then(d => {
+        setFunEntries(d.entries ?? [])
+        setProgramStartedAt(d.started_at ?? null)
+        setProgramStage(d.stage ?? null)
+      })
       .finally(() => setFunLoading(false))
   }, [id])
+
+  const STAGES = ['制御', '疑似', '想像', '維持']
+
+  const handleStartProgram = async () => {
+    if (!confirm('カウンセリングプログラムを開始しますか？')) return
+    setProgramStarting(true)
+    await apiFetch('/counselor/start-program', { method: 'POST', body: JSON.stringify({ patient_id: id }) })
+    setProgramStartedAt(new Date().toISOString())
+    setProgramStage('制御')
+    setProgramStarting(false)
+  }
+
+  const handleChangeStage = async (stage: string) => {
+    if (!confirm(`ステージを「${stage}」に変更しますか？`)) return
+    setStageChanging(true)
+    await apiFetch('/counselor/start-program', { method: 'PATCH', body: JSON.stringify({ patient_id: id, stage }) })
+    setProgramStage(stage)
+    setStageChanging(false)
+  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -243,6 +270,62 @@ export default function PatientDetailPage() {
           <div className={styles.actions}>
             <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>{saving ? '保存中...' : '保存'}</button>
             <button className={styles.cancelBtn} onClick={() => setEditing(false)}>キャンセル</button>
+          </div>
+        )}
+      </div>
+
+      {/* カウンセリングプログラム */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>カウンセリングプログラム</h2>
+        {programStartedAt === undefined ? (
+          <p style={{ color: '#94a3b8', fontSize: 14 }}>読み込み中...</p>
+        ) : !programStartedAt ? (
+          <div>
+            <p style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>
+              スタートすると進捗カウントが始まります。
+            </p>
+            <button
+              onClick={handleStartProgram}
+              disabled={programStarting}
+              style={{ background: '#15803d', color: 'white', border: 'none', borderRadius: 8, padding: '10px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: programStarting ? 0.6 : 1 }}
+            >
+              {programStarting ? '開始中...' : 'カウンセリングスタート'}
+            </button>
+          </div>
+        ) : (
+          <div>
+            <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#15803d' }}>
+              ✅ 開始日：{new Date(programStartedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+            </div>
+            {/* ステージ表示 */}
+            <div style={{ marginBottom: 12 }}>
+              <p style={{ fontSize: 12, color: '#64748b', margin: '0 0 8px' }}>現在のステージ</p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {STAGES.map((s) => (
+                  <div key={s} style={{
+                    padding: '6px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600,
+                    background: programStage === s ? '#15803d' : '#f1f5f9',
+                    color: programStage === s ? 'white' : '#94a3b8',
+                  }}>{s}ステージ</div>
+                ))}
+              </div>
+            </div>
+            {/* ステージ変更ボタン */}
+            {(() => {
+              const currentIdx = STAGES.indexOf(programStage ?? '')
+              const nextStage = currentIdx < STAGES.length - 1 ? STAGES[currentIdx + 1] : null
+              return nextStage ? (
+                <button
+                  onClick={() => handleChangeStage(nextStage)}
+                  disabled={stageChanging}
+                  style={{ background: '#1e40af', color: 'white', border: 'none', borderRadius: 8, padding: '9px 20px', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: stageChanging ? 0.6 : 1 }}
+                >
+                  {stageChanging ? '変更中...' : `${nextStage}ステージへ移行`}
+                </button>
+              ) : (
+                <p style={{ fontSize: 13, color: '#15803d', fontWeight: 600 }}>🎉 全ステージ完了</p>
+              )
+            })()}
           </div>
         )}
       </div>

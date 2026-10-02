@@ -38,6 +38,7 @@ function calcProgress(startedAt: string | null, entries: Entry[]) {
 export default function GoodThingsPage() {
   const [entries, setEntries] = useState<Entry[]>([])
   const [startedAt, setStartedAt] = useState<string | null>(null)
+  const [stage, setStage] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [descOpen, setDescOpen] = useState(false)
   const [input, setInput] = useState('')
@@ -51,6 +52,7 @@ export default function GoodThingsPage() {
       .then((r) => r.json())
       .then((d) => {
         setStartedAt(d.started_at)
+        setStage(d.stage)
         setEntries(d.entries ?? [])
       })
       .finally(() => setLoading(false))
@@ -83,7 +85,7 @@ export default function GoodThingsPage() {
 
   if (loading) return <p style={{ padding: 16 }}>読み込み中...</p>
 
-  const prog = calcProgress(startedAt, entries)
+  const prog = startedAt ? calcProgress(startedAt, entries) : null
   const canAdd = entries.length < 50
 
   return (
@@ -106,30 +108,34 @@ export default function GoodThingsPage() {
         )}
       </div>
 
-      {/* 進捗 */}
-      <div style={{ background: '#f0fdf4', borderRadius: 12, padding: '14px 16px', marginBottom: 20, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        <div style={{ flex: 1, minWidth: 100 }}>
-          <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>合計</p>
-          <p style={{ fontSize: 22, fontWeight: 700, color: '#15803d', margin: 0 }}>{entries.length}<span style={{ fontSize: 13, fontWeight: 400 }}> / 50話</span></p>
-        </div>
-        <div style={{ flex: 1, minWidth: 100 }}>
-          <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>今日</p>
-          <p style={{ fontSize: 22, fontWeight: 700, color: prog.todayCount >= 3 ? '#15803d' : '#f59e0b', margin: 0 }}>{prog.todayCount}<span style={{ fontSize: 13, fontWeight: 400 }}> / 3話</span></p>
-        </div>
-        <div style={{ flex: 1, minWidth: 100 }}>
-          <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>1週目目標</p>
-          <p style={{ fontSize: 22, fontWeight: 700, color: entries.length >= 25 ? '#15803d' : '#94a3b8', margin: 0 }}>25話</p>
-        </div>
-      </div>
+      {/* 進捗（カウンセリング開始後のみ） */}
+      {prog && (
+        <>
+          <div style={{ background: '#f0fdf4', borderRadius: 12, padding: '14px 16px', marginBottom: 20, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: 100 }}>
+              <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>合計</p>
+              <p style={{ fontSize: 22, fontWeight: 700, color: '#15803d', margin: 0 }}>{entries.length}<span style={{ fontSize: 13, fontWeight: 400 }}> / 50話</span></p>
+            </div>
+            <div style={{ flex: 1, minWidth: 100 }}>
+              <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>今日</p>
+              <p style={{ fontSize: 22, fontWeight: 700, color: prog.todayCount >= 3 ? '#15803d' : '#f59e0b', margin: 0 }}>{prog.todayCount}<span style={{ fontSize: 13, fontWeight: 400 }}> / 3話</span></p>
+            </div>
+            <div style={{ flex: 1, minWidth: 100 }}>
+              <p style={{ fontSize: 11, color: '#94a3b8', margin: '0 0 2px' }}>1週目目標</p>
+              <p style={{ fontSize: 22, fontWeight: 700, color: entries.length >= 25 ? '#15803d' : '#94a3b8', margin: 0 }}>25話</p>
+            </div>
+          </div>
 
-      {/* 遅れている場合の促し */}
-      {prog.behind > 0 && entries.length < 50 && (
-        <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#92400e' }}>
-          本日はあと<strong>{prog.behind}話</strong>です。
-        </div>
+          {/* 遅れている場合の促し */}
+          {prog.behind > 0 && entries.length < 50 && (
+            <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#92400e' }}>
+              本日はあと<strong>{prog.behind}話</strong>です。
+            </div>
+          )}
+        </>
       )}
 
-      {entries.length >= 50 && (
+      {prog && entries.length >= 50 && (
         <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '14px 16px', marginBottom: 16, fontSize: 15, color: '#15803d', fontWeight: 600 }}>
           🎉 50話の書き出しが完了しました！お疲れ様でした。
         </div>

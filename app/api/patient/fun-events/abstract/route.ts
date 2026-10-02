@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   const { data: program } = await supabaseAdmin
     .from('counseling_programs')
-    .select('started_at')
+    .select('started_at, stage')
     .eq('patient_id', patient_id)
     .single()
 
@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
 
   return Response.json({
     started_at: program?.started_at ?? null,
+    stage: program?.stage ?? null,
     entries: entries ?? [],
   })
 }
