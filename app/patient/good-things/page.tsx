@@ -91,7 +91,19 @@ export default function GoodThingsPage() {
   return (
     <div style={{ maxWidth: 640, paddingBottom: 40 }}>
       <h1 style={{ fontSize: 22, fontWeight: 700, color: '#14532d', marginBottom: 4 }}>良かったことの書き出し</h1>
-      <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 16 }}>目標：50話（2週間）</p>
+      <p style={{ fontSize: 13, color: '#94a3b8', marginBottom: 12 }}>目標：50話（2週間）</p>
+
+      {/* カウンセリング状態 */}
+      {!startedAt ? (
+        <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#64748b' }}>
+          まだカウンセリングは始まっておりません。
+        </div>
+      ) : (
+        <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '10px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 13, color: '#64748b' }}>現在のステージ</span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#15803d' }}>{stage}ステージ</span>
+        </div>
+      )}
 
       {/* 説明文 */}
       <div style={{ marginBottom: 16 }}>

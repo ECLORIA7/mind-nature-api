@@ -80,6 +80,8 @@ export default function PreviewPage() {
   // 良かったこと
   type FunEntry = { id: string; entry_num: number; content: string; created_at: string }
   const [funEntries, setFunEntries] = useState<FunEntry[]>([])
+  const [funStartedAt, setFunStartedAt] = useState<string | null>(null)
+  const [funStage, setFunStage] = useState<string | null>(null)
   const [funLoaded, setFunLoaded] = useState(false)
 
   // 行動の記録
@@ -124,7 +126,11 @@ export default function PreviewPage() {
     if (activeTab !== '良かったこと' || funLoaded) return
     apiFetch(`/patient/fun-events/abstract?patient_id=${patientId}`)
       .then((r) => r.json())
-      .then((d) => setFunEntries(d.entries ?? []))
+      .then((d) => {
+        setFunEntries(d.entries ?? [])
+        setFunStartedAt(d.started_at ?? null)
+        setFunStage(d.stage ?? null)
+      })
       .finally(() => setFunLoaded(true))
   }, [activeTab, patientId, funLoaded])
 
