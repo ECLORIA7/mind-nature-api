@@ -28,7 +28,7 @@ function calcProgress(startedAt: string | null, entries: Entry[]) {
   today.setHours(0, 0, 0, 0)
   const daysElapsed = Math.max(1, Math.floor((today.getTime() - start.getTime()) / 86400000) + 1)
   const todayStr = today.toLocaleDateString('sv-SE')
-  const todayCount = entries.filter((e) => e.created_at.slice(0, 10) === todayStr).length
+  const todayCount = entries.filter((e) => new Date(e.created_at).toLocaleDateString('sv-SE') === todayStr).length
   const weekTarget = daysElapsed <= 7 ? 25 : 50
   const scheduledTotal = Math.min(50, daysElapsed * 3)
   const behind = Math.max(0, scheduledTotal - entries.length)
