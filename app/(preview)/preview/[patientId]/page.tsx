@@ -20,8 +20,8 @@ type Todo = { id: string; title?: string; content?: string; completed: boolean }
 type Message = { id: string; poster_id: string; content: string; sequence_num: number; profiles?: { full_name: string } }
 type Group = { id: string; name: string; organizations?: { name: string } }
 
-type Tab = 'ToDo' | '行動の記録' | 'テスト' | 'チャット' | 'グループ' | 'マイページ' | 'カウンセラー記録'
-const PATIENT_TABS: Tab[] = ['ToDo', '行動の記録', 'テスト', 'チャット', 'グループ', 'マイページ']
+type Tab = 'ToDo' | '良かったこと' | '行動の記録' | 'テスト' | 'チャット' | 'グループ' | 'マイページ' | 'カウンセラー記録'
+const PATIENT_TABS: Tab[] = ['ToDo', '良かったこと', '行動の記録', 'テスト', 'チャット', 'グループ', 'マイページ']
 
 export default function PreviewPage() {
   const { patientId } = useParams<{ patientId: string }>()
@@ -77,6 +77,11 @@ export default function PreviewPage() {
   const [testDetailLoading, setTestDetailLoading] = useState(false)
   const [selectedResult, setSelectedResult] = useState<TestResult | null>(null)
 
+  // 良かったこと
+  type FunEntry = { id: string; entry_num: number; content: string; created_at: string }
+  const [funEntries, setFunEntries] = useState<FunEntry[]>([])
+  const [funLoaded, setFunLoaded] = useState(false)
+
   // 行動の記録
   const [behaviorAddicId, setBehaviorAddicId] = useState<number | null>(null)
   const [behaviorView, setBehaviorView] = useState<'month' | 'day'>('month')
@@ -113,6 +118,15 @@ export default function PreviewPage() {
       })
       .finally(() => setCoreLoading(false))
   }, [patientId])
+
+  // Load 良かったこと when tab active
+  useEffect(() => {
+    if (activeTab !== '良かったこと' || funLoaded) return
+    apiFetch(`/patient/fun-events/abstract?patient_id=${patientId}`)
+      .then((r) => r.json())
+      .then((d) => setFunEntries(d.entries ?? []))
+      .finally(() => setFunLoaded(true))
+  }, [activeTab, patientId, funLoaded])
 
   // Load ToDo when tab active
   useEffect(() => {
@@ -284,6 +298,30 @@ export default function PreviewPage() {
                   </li>
                 ))}
               </ul>
+            )}
+          </div>
+        )}
+
+        {/* ===== 良かったこと ===== */}
+        {activeTab === '良かったこと' && (
+          <div>
+            <h1 className={styles.heading}>良かったことの書き出し</h1>
+            {!funLoaded ? <p>読み込み中...</p> : funEntries.length === 0 ? (
+              <p className={styles.empty}>まだ記録がありません</p>
+            ) : (
+              <>
+                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>{funEntries.length} / 50話</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {funEntries.map((e) => (
+                    <div key={e.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 16px' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#15803d', marginBottom: 4 }}>
+                        No.{e.entry_num} · {new Date(e.created_at).toLocaleDateString('ja-JP')}
+                      </div>
+                      <p style={{ fontSize: 14, color: '#1e293b', margin: 0, lineHeight: 1.7 }}>{e.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         )}
