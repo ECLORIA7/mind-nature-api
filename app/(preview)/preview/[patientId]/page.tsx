@@ -312,21 +312,35 @@ export default function PreviewPage() {
         {activeTab === '良かったこと' && (
           <div>
             <h1 className={styles.heading}>良かったことの書き出し</h1>
-            {!funLoaded ? <p>読み込み中...</p> : funEntries.length === 0 ? (
-              <p className={styles.empty}>まだ記録がありません</p>
-            ) : (
+            {!funLoaded ? <p>読み込み中...</p> : (
               <>
-                <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>{funEntries.length} / 50話</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  {funEntries.map((e) => (
-                    <div key={e.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 16px' }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#15803d', marginBottom: 4 }}>
-                        No.{e.entry_num} · {new Date(e.created_at).toLocaleDateString('ja-JP')}
-                      </div>
-                      <p style={{ fontSize: 14, color: '#1e293b', margin: 0, lineHeight: 1.7 }}>{e.content}</p>
+                {!funStartedAt ? (
+                  <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#64748b' }}>
+                    まだカウンセリングは始まっておりません。
+                  </div>
+                ) : (
+                  <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '10px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 13, color: '#64748b' }}>現在のステージ</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#15803d' }}>{funStage}ステージ</span>
+                  </div>
+                )}
+                {funEntries.length === 0 ? (
+                  <p className={styles.empty}>まだ記録がありません</p>
+                ) : (
+                  <>
+                    <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>{funEntries.length} / 50話</p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {funEntries.map((e) => (
+                        <div key={e.id} style={{ background: 'white', border: '1px solid #e2e8f0', borderRadius: 12, padding: '12px 16px' }}>
+                          <div style={{ fontSize: 12, fontWeight: 700, color: '#15803d', marginBottom: 4 }}>
+                            No.{e.entry_num} · {new Date(e.created_at).toLocaleDateString('ja-JP')}
+                          </div>
+                          <p style={{ fontSize: 14, color: '#1e293b', margin: 0, lineHeight: 1.7 }}>{e.content}</p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
+                  </>
+                )}
               </>
             )}
           </div>
