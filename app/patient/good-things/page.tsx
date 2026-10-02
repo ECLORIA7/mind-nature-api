@@ -125,7 +125,7 @@ export default function GoodThingsPage() {
       {/* 遅れている場合の促し */}
       {prog.behind > 0 && entries.length < 50 && (
         <div style={{ background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 10, padding: '12px 16px', marginBottom: 16, fontSize: 14, color: '#92400e' }}>
-          📅 予定より <strong>{prog.behind}話</strong> 遅れています。今日は多めに書いてみましょう！
+          本日はあと<strong>{prog.behind}話</strong>です。
         </div>
       )}
 
