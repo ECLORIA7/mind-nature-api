@@ -33,8 +33,9 @@ export default function PatientDetailPage() {
   const [loading, setLoading] = useState(true)
   const [tests, setTests] = useState<TestItem[]>([])
   const [testsLoading, setTestsLoading] = useState(true)
-  const [programStartedAt, setProgramStartedAt] = useState<string | null | undefined>(undefined)
-  const [programStarting, setProgramStarting] = useState(false)
+  type FunEntry = { id: string; entry_num: number; content: string; created_at: string }
+  const [funEntries, setFunEntries] = useState<FunEntry[]>([])
+  const [funLoading, setFunLoading] = useState(true)
 
   // 依存症管理
   const [showAddAddicForm, setShowAddAddicForm] = useState(false)
@@ -77,16 +78,9 @@ export default function PatientDetailPage() {
     loadTests()
     apiFetch('/addictions').then(r => r.json()).then(d => setAllAddictions(d.addictions ?? []))
     apiFetch(`/patient/fun-events/abstract?patient_id=${id}`)
-      .then(r => r.json()).then(d => setProgramStartedAt(d.started_at ?? null))
+      .then(r => r.json()).then(d => setFunEntries(d.entries ?? []))
+      .finally(() => setFunLoading(false))
   }, [id])
-
-  const handleStartProgram = async () => {
-    if (!confirm('カウンセリングプログラムを開始しますか？\n（良かったことの書き出しが患者画面に表示されます）')) return
-    setProgramStarting(true)
-    await apiFetch('/counselor/start-program', { method: 'POST', body: JSON.stringify({ patient_id: id }) })
-    setProgramStartedAt(new Date().toISOString())
-    setProgramStarting(false)
-  }
 
   const handleSave = async () => {
     setSaving(true)
@@ -253,28 +247,25 @@ export default function PatientDetailPage() {
         )}
       </div>
 
-      {/* カウンセリングプログラム */}
+      {/* 良かったことの書き出し */}
       <div className={styles.section}>
-        <h2 className={styles.sectionTitle}>カウンセリングプログラム</h2>
-        {programStartedAt === undefined ? (
+        <h2 className={styles.sectionTitle}>良かったことの書き出し</h2>
+        {funLoading ? (
           <p style={{ color: '#94a3b8', fontSize: 14 }}>読み込み中...</p>
-        ) : programStartedAt ? (
-          <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '12px 16px', fontSize: 14, color: '#15803d' }}>
-            ✅ プログラム開始済み：{new Date(programStartedAt).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
-          </div>
+        ) : funEntries.length === 0 ? (
+          <p style={{ color: '#94a3b8', fontSize: 14 }}>まだ記録がありません</p>
         ) : (
-          <div>
-            <p style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>
-              プログラムを開始すると、クライアントの「良かったことの書き出し」画面が有効になります。
-            </p>
-            <button
-              onClick={handleStartProgram}
-              disabled={programStarting}
-              style={{ background: '#15803d', color: 'white', border: 'none', borderRadius: 8, padding: '10px 24px', fontSize: 14, fontWeight: 600, cursor: 'pointer', opacity: programStarting ? 0.6 : 1 }}
-            >
-              {programStarting ? '開始中...' : 'プログラムを開始する'}
-            </button>
-          </div>
+          <>
+            <p style={{ fontSize: 13, color: '#64748b', marginBottom: 12 }}>{funEntries.length} / 50話</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {funEntries.map((e) => (
+                <div key={e.id} style={{ background: '#f8fafc', borderRadius: 8, padding: '10px 14px' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#15803d', marginBottom: 4 }}>No.{e.entry_num} · {new Date(e.created_at).toLocaleDateString('ja-JP')}</div>
+                  <p style={{ fontSize: 14, color: '#1e293b', margin: 0, lineHeight: 1.7 }}>{e.content}</p>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

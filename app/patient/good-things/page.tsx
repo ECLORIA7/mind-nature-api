@@ -18,8 +18,11 @@ const DESCRIPTION = `今までに体験したよかった事、嬉しかった�
 ２、５歳の頃、正月にお年玉をもらった
 ３、小学校に入学するときに、ランドセルを買ってもらった`
 
-function calcProgress(startedAt: string, entries: Entry[]) {
-  const start = new Date(startedAt)
+function calcProgress(startedAt: string | null, entries: Entry[]) {
+  const refDate = startedAt
+    ? startedAt
+    : entries.length > 0 ? entries[0].created_at : new Date().toISOString()
+  const start = new Date(refDate)
   start.setHours(0, 0, 0, 0)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -79,18 +82,6 @@ export default function GoodThingsPage() {
   }
 
   if (loading) return <p style={{ padding: 16 }}>読み込み中...</p>
-
-  if (!startedAt) {
-    return (
-      <div style={{ padding: 24, maxWidth: 600 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#14532d', marginBottom: 16 }}>良かったことの書き出し</h1>
-        <div style={{ background: '#f0fdf4', borderRadius: 12, padding: 20, color: '#15803d', fontSize: 15 }}>
-          カウンセリングプログラムがまだ開始されていません。<br />
-          カウンセラーにご連絡ください。
-        </div>
-      </div>
-    )
-  }
 
   const prog = calcProgress(startedAt, entries)
   const canAdd = entries.length < 50
