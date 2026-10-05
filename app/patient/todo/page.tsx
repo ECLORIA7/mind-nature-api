@@ -11,6 +11,8 @@ export default function PatientTodoPage() {
   const [loading, setLoading] = useState(true)
   const [input, setInput] = useState('')
   const [saving, setSaving] = useState(false)
+  const [stage, setStage] = useState<string | null>(null)
+  const [startedAt, setStartedAt] = useState<string | null | undefined>(undefined)
 
   const fetchTodos = () =>
     apiFetch('/patient/todo')
@@ -18,7 +20,12 @@ export default function PatientTodoPage() {
       .then((d) => setTodos(d.todos ?? []))
       .finally(() => setLoading(false))
 
-  useEffect(() => { fetchTodos() }, [])
+  useEffect(() => {
+    fetchTodos()
+    apiFetch('/patient/fun-events/abstract')
+      .then((r) => r.json())
+      .then((d) => { setStartedAt(d.started_at ?? null); setStage(d.stage ?? null) })
+  }, [])
 
   const addTodo = async () => {
     if (!input.trim()) return
@@ -39,6 +46,20 @@ export default function PatientTodoPage() {
   return (
     <div>
       <h1 className={styles.heading}>ToDo</h1>
+
+      {/* カウンセリングステージ */}
+      {startedAt !== undefined && (
+        !startedAt ? (
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 16px', marginBottom: 20, fontSize: 14, color: '#64748b' }}>
+            まだカウンセリングは始まっておりません。
+          </div>
+        ) : (
+          <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '10px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 13, color: '#64748b' }}>現在のステージ</span>
+            <span style={{ fontSize: 15, fontWeight: 700, color: '#15803d' }}>{stage}ステージ</span>
+          </div>
+        )
+      )}
       <div className={styles.inputRow}>
         <input
           className={styles.input}
