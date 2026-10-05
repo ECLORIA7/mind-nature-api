@@ -40,6 +40,10 @@ export default function PatientDetailPage() {
   const [programStage, setProgramStage] = useState<string | null>(null)
   const [programStarting, setProgramStarting] = useState(false)
   const [stageChanging, setStageChanging] = useState(false)
+  const [notice, setNotice] = useState('')
+  const [noticeSaving, setNoticeSaving] = useState(false)
+  const [noticeEditing, setNoticeEditing] = useState(false)
+  const [noticeInput, setNoticeInput] = useState('')
 
   // 依存症管理
   const [showAddAddicForm, setShowAddAddicForm] = useState(false)
@@ -88,7 +92,20 @@ export default function PatientDetailPage() {
         setProgramStage(d.stage ?? null)
       })
       .finally(() => setFunLoading(false))
+    apiFetch(`/patient/notice?patient_id=${id}`)
+      .then(r => r.json()).then(d => { if (d.content) setNotice(d.content) })
   }, [id])
+
+  const handleSaveNotice = async () => {
+    setNoticeSaving(true)
+    await apiFetch('/counselor/patient/notice', {
+      method: 'PUT',
+      body: JSON.stringify({ patient_id: id, content: noticeInput }),
+    })
+    setNotice(noticeInput)
+    setNoticeEditing(false)
+    setNoticeSaving(false)
+  }
 
   const STAGES = ['制御', '疑似', '想像', '維持']
 
@@ -239,6 +256,41 @@ export default function PatientDetailPage() {
           })}
         </div>
       )}
+
+      {/* 掲示メッセージ */}
+      <div className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>トップページへの掲示</h2>
+          {!noticeEditing && (
+            <button className={styles.editBtn} onClick={() => { setNoticeInput(notice); setNoticeEditing(true) }}>
+              {notice ? '編集' : '作成'}
+            </button>
+          )}
+        </div>
+        {noticeEditing ? (
+          <>
+            <textarea
+              className={styles.textarea}
+              rows={4}
+              value={noticeInput}
+              onChange={(e) => setNoticeInput(e.target.value)}
+              placeholder="クライアントのトップページに表示するメッセージを入力..."
+            />
+            <div className={styles.actions}>
+              <button className={styles.saveBtn} onClick={handleSaveNotice} disabled={noticeSaving}>
+                {noticeSaving ? '保存中...' : '保存'}
+              </button>
+              <button className={styles.cancelBtn} onClick={() => setNoticeEditing(false)}>キャンセル</button>
+            </div>
+          </>
+        ) : notice ? (
+          <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 10, padding: '12px 16px', fontSize: 14, color: '#1e293b', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+            {notice}
+          </div>
+        ) : (
+          <p style={{ color: '#94a3b8', fontSize: 14 }}>掲示メッセージはありません</p>
+        )}
+      </div>
 
       <div className={styles.section}>
         <div className={styles.sectionHeader}>

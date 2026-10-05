@@ -13,6 +13,7 @@ export default function PatientTodoPage() {
   const [saving, setSaving] = useState(false)
   const [stage, setStage] = useState<string | null>(null)
   const [startedAt, setStartedAt] = useState<string | null | undefined>(undefined)
+  const [notice, setNotice] = useState<{ content: string; updated_at: string } | null>(null)
 
   const fetchTodos = () =>
     apiFetch('/patient/todo')
@@ -25,6 +26,9 @@ export default function PatientTodoPage() {
     apiFetch('/patient/fun-events/abstract')
       .then((r) => r.json())
       .then((d) => { setStartedAt(d.started_at ?? null); setStage(d.stage ?? null) })
+    apiFetch('/patient/notice')
+      .then((r) => r.json())
+      .then((d) => { if (d.content) setNotice({ content: d.content, updated_at: d.updated_at }) })
   }, [])
 
   const addTodo = async () => {
@@ -50,15 +54,26 @@ export default function PatientTodoPage() {
       {/* カウンセリングステージ */}
       {startedAt !== undefined && (
         !startedAt ? (
-          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 16px', marginBottom: 20, fontSize: 14, color: '#64748b' }}>
+          <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 10, padding: '10px 16px', marginBottom: 16, fontSize: 14, color: '#64748b' }}>
             まだカウンセリングは始まっておりません。
           </div>
         ) : (
-          <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '10px 16px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: 10, padding: '10px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: 13, color: '#64748b' }}>現在のステージ</span>
             <span style={{ fontSize: 15, fontWeight: 700, color: '#15803d' }}>{stage}ステージ</span>
           </div>
         )
+      )}
+
+      {/* カウンセラーからの掲示 */}
+      {notice && (
+        <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: 10, padding: '14px 16px', marginBottom: 20 }}>
+          <p style={{ fontSize: 12, color: '#92400e', margin: '0 0 6px', fontWeight: 600 }}>📌 カウンセラーからのお知らせ</p>
+          <p style={{ fontSize: 14, color: '#1e293b', margin: 0, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{notice.content}</p>
+          <p style={{ fontSize: 11, color: '#94a3b8', margin: '6px 0 0', textAlign: 'right' }}>
+            {new Date(notice.updated_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
       )}
       <div className={styles.inputRow}>
         <input

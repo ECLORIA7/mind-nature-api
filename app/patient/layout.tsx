@@ -28,7 +28,6 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
   }
 
   const links = [
-    { href: '/patient/todo', label: 'ToDo', active: pathname === '/patient/todo' },
     { href: '/patient/good-things', label: '良かったこと', active: pathname === '/patient/good-things' },
     { href: '/patient/behavior', label: '行動の記録', active: pathname.startsWith('/patient/behavior') },
     { href: '/patient/tests', label: 'テスト', active: pathname.startsWith('/patient/tests') },
@@ -40,7 +39,7 @@ export default function PatientLayout({ children }: { children: React.ReactNode 
   return (
     <div className={styles.wrapper}>
       <nav className={styles.nav}>
-        <span className={styles.brand}>MindNature</span>
+        <Link href="/patient/todo" className={styles.brand}>MindNature</Link>
         <div className={styles.links}>
           {links.map((l) => (
             <Link key={l.href} href={l.href} className={l.active ? styles.active : styles.link}>{l.label}</Link>
