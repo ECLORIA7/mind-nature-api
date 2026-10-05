@@ -40,6 +40,9 @@ export default function PatientDetailPage() {
   const [programStage, setProgramStage] = useState<string | null>(null)
   const [programStarting, setProgramStarting] = useState(false)
   const [stageChanging, setStageChanging] = useState(false)
+  const [todos, setTodos] = useState<{ id: string; title: string; completed: boolean }[]>([])
+  const [todoInput, setTodoInput] = useState('')
+  const [todoSaving, setTodoSaving] = useState(false)
   const [notice, setNotice] = useState('')
   const [noticeSaving, setNoticeSaving] = useState(false)
   const [noticeEditing, setNoticeEditing] = useState(false)
@@ -94,7 +97,27 @@ export default function PatientDetailPage() {
       .finally(() => setFunLoading(false))
     apiFetch(`/patient/notice?patient_id=${id}`)
       .then(r => r.json()).then(d => { if (d.content) setNotice(d.content) })
+    apiFetch(`/patient/todo?patient_id=${id}`)
+      .then(r => r.json()).then(d => setTodos(d.todos ?? []))
   }, [id])
+
+  const handleAddTodo = async () => {
+    if (!todoInput.trim()) return
+    setTodoSaving(true)
+    const r = await apiFetch('/counselor/patient/todo', {
+      method: 'POST',
+      body: JSON.stringify({ patient_id: id, title: todoInput.trim() }),
+    })
+    const d = await r.json()
+    if (d.todo) setTodos((prev) => [...prev, d.todo])
+    setTodoInput('')
+    setTodoSaving(false)
+  }
+
+  const handleDeleteTodo = async (todoId: string) => {
+    await apiFetch('/counselor/patient/todo', { method: 'DELETE', body: JSON.stringify({ id: todoId }) })
+    setTodos((prev) => prev.filter((t) => t.id !== todoId))
+  }
 
   const handleSaveNotice = async () => {
     setNoticeSaving(true)
@@ -256,6 +279,40 @@ export default function PatientDetailPage() {
           })}
         </div>
       )}
+
+      {/* ToDo管理 */}
+      <div className={styles.section}>
+        <h2 className={styles.sectionTitle}>今日やること（ToDo）</h2>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <input
+            value={todoInput}
+            onChange={(e) => setTodoInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddTodo()}
+            placeholder="ToDoを追加..."
+            style={{ flex: 1, padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: 8, fontSize: 14 }}
+          />
+          <button
+            onClick={handleAddTodo}
+            disabled={todoSaving || !todoInput.trim()}
+            style={{ background: '#1e293b', color: 'white', border: 'none', borderRadius: 8, padding: '8px 16px', fontSize: 14, cursor: 'pointer', opacity: todoInput.trim() ? 1 : 0.5 }}
+          >追加</button>
+        </div>
+        {todos.length === 0 ? (
+          <p style={{ color: '#94a3b8', fontSize: 14 }}>ToDoはありません</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {todos.map((t) => (
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#f8fafc', borderRadius: 8, padding: '8px 12px' }}>
+                <span style={{ flex: 1, fontSize: 14, color: '#1e293b' }}>{t.title}</span>
+                <button
+                  onClick={() => handleDeleteTodo(t.id)}
+                  style={{ background: 'none', border: 'none', color: '#ef4444', fontSize: 13, cursor: 'pointer' }}
+                >削除</button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* 掲示メッセージ */}
       <div className={styles.section}>
