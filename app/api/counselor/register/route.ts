@@ -31,6 +31,7 @@ export async function POST(req: NextRequest) {
 
 async function registerPatient(body: Record<string, unknown>, hospitalId: number | null) {
   const email = String(body.email ?? '').trim()
+  const full_name = String(body.full_name ?? '').trim()
 
   if (!email) {
     return Response.json({ error: 'email は必須です' }, { status: 400 })
@@ -50,7 +51,7 @@ async function registerPatient(body: Record<string, unknown>, hospitalId: number
   await supabaseAdmin.from('profiles').insert({
     id: userId,
     role: 'patient',
-    full_name: '',
+    full_name,
     hospital_id: hospitalId,
   })
 

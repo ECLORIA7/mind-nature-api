@@ -11,6 +11,7 @@ type SelectedAddiction = { addiction_id: number; name: string }
 
 export default function RegisterClientPage() {
   const [email, setEmail] = useState('')
+  const [fullName, setFullName] = useState('')
   const [groupId, setGroupId] = useState('')
   const [groups, setGroups] = useState<Group[]>([])
   const [allAddictions, setAllAddictions] = useState<Addiction[]>([])
@@ -54,6 +55,7 @@ export default function RegisterClientPage() {
         body: JSON.stringify({
           type: 'patient',
           email: email.trim(),
+          full_name: fullName.trim(),
           addictions: selectedAddictions.map((s) => ({ addiction_id: s.addiction_id })),
         }),
       })
@@ -72,6 +74,7 @@ export default function RegisterClientPage() {
 
       setResult({ email: email.trim(), password: data.temporary_password, groupName })
       setEmail('')
+      setFullName('')
       setGroupId('')
       setSelectedAddictions([])
     } catch {
@@ -86,11 +89,19 @@ export default function RegisterClientPage() {
       <h1 className={styles.heading}>クライアント登録</h1>
       <div className={styles.card}>
         <p className={styles.desc}>
-          メールアドレスを入力してアカウントを作成します。<br />
-          仮パスワードが発行されますので、クライアントへお伝えください。<br />
-          クライアントは初回ログイン時に自分でプロフィールを入力します。
+          必要事項を入力してアカウントを作成します。<br />
+          登録完了後、ログイン情報がクライアントのメールアドレスへ自動送信されます。
         </p>
         <form onSubmit={handleSubmit} className={styles.form}>
+          <label className={styles.label}>氏名（任意）</label>
+          <input
+            className={styles.input}
+            type="text"
+            placeholder="山田 太郎"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+          />
+
           <label className={styles.label}>メールアドレス</label>
           <input
             className={styles.input}
@@ -151,7 +162,7 @@ export default function RegisterClientPage() {
       {result && (
         <div className={styles.resultCard}>
           <h2 className={styles.resultTitle}>登録完了</h2>
-          <p className={styles.resultDesc}>以下の情報をクライアントへお伝えください。</p>
+          <p className={styles.resultDesc}>ログイン情報をクライアントのメールアドレスへ送信しました。</p>
           <div className={styles.resultRow}>
             <span className={styles.resultLabel}>メールアドレス</span>
             <span className={styles.resultValue}>{result.email}</span>
@@ -166,7 +177,7 @@ export default function RegisterClientPage() {
               <span className={styles.resultValue}>{result.groupName}</span>
             </div>
           )}
-          <p className={styles.resultNote}>※ クライアントが初回ログイン後にプロフィールを入力します。</p>
+          <p className={styles.resultNote}>※ クライアントが初回ログイン後に残りのプロフィールを入力します。</p>
         </div>
       )}
     </div>
